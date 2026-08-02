@@ -1,51 +1,133 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
-import { mockApi } from './mock-api.js'
+import { supabase } from './supabase.js'
 
 const AuthContext = createContext(null)
 
-const SESSION_KEY = 'sdds_session'
+function mapProfileToUser(profile) {
+  if (!profile) return null
+  return {
+    id: profile.id,
+    name: profile.name,
+    email: profile.email,
+    role: profile.role,
+    department: profile.department,
+    designation: profile.designation,
+    phone: profile.phone,
+    status: profile.status,
+    avatar: profile.avatar,
+    createdAt: profile.created_at,
+    lastLogin: profile.last_login,
+  }
+}
+
+async function fetchProfile(userId) {
+  const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single()
+  if (error) throw error
+  return mapProfileToUser(data)
+}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const raw = localStorage.getItem(SESSION_KEY)
-    if (raw) {
-      try {
-        setUser(JSON.parse(raw))
-      } catch {
-        localStorage.removeItem(SESSION_KEY)
+    let active = true
+
+    // On load, restore session (this is a real Supabase session, so it's
+    // valid on any device you log in from — nothing is tied to one browser).
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!active) return
+      if (session?.user) {
+        try {
+          setUser(await fetchProfile(session.user.id))
+        } catch {
+          setUser(null)
+        }
       }
+      setLoading(false)
+    })
+
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!active) return
+      if (session?.user) {
+        try {
+          setUser(await fetchProfile(session.user.id))
+        } catch {
+          setUser(null)
+        }
+      } else {
+        setUser(null)
+      }
+    })
+
+    return () => {
+      active = false
+      listener?.subscription?.unsubscribe()
     }
-    setLoading(false)
   }, [])
 
   const login = useCallback(async (email, password) => {
-    const { user: u, token } = await mockApi.login(email, password)
-    localStorage.setItem(SESSION_KEY, JSON.stringify(u))
-    localStorage.setItem('sdds_token', token)
-    setUser(u)
-    return u
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) throw new Error(error.message)
+    const profile = await fetchProfile(data.user.id)
+    if (profile.status !== 'active') {
+      await supabase.auth.signOut()
+      throw new Error('Account is deactivated. Contact administrator.')
+    }
+    await supabase.from('profiles').update({ last_login: new Date().toISOString() }).eq('id', data.user.id)
+    setUser(profile)
+    return profile
   }, [])
 
-  const register = useCallback(async (data) => {
-    const { user: u, token } = await mockApi.register(data)
-    localStorage.setItem(SESSION_KEY, JSON.stringify(u))
-    localStorage.setItem('sdds_token', token)
-    setUser(u)
-    return u
+  const register = useCallback(async (formData) => {
+    const { data, error } = await supabase.auth.signUp({
+      email: formData.email,
+      password: formData.password,
+      options: {
+        data: {
+          name: formData.name,
+          role: formData.role || 'citizen',
+          department: formData.department || 'panchayat',
+          designation: formData.designation || '',
+          phone: formData.phone || '',
+        },
+      },
+    })
+    if (error) throw new Error(error.message)
+
+    // If email confirmation is enabled in your Supabase project, there is no
+    // session yet at this point — the user must confirm via email first.
+    if (!data.session) {
+      throw new Error('Account created. Check your email to confirm before logging in.')
+    }
+    const profile = await fetchProfile(data.user.id)
+    setUser(profile)
+    return profile
   }, [])
 
-  const logout = useCallback(() => {
-    localStorage.removeItem(SESSION_KEY)
-    localStorage.removeItem('sdds_token')
+  const logout = useCallback(async () => {
+    await supabase.auth.signOut()
     setUser(null)
   }, [])
 
-  const updateUser = useCallback((updated) => {
-    setUser(updated)
-    localStorage.setItem(SESSION_KEY, JSON.stringify(updated))
+  const updateUser = useCallback(async (updated) => {
+    const { id, ...fields } = updated
+    // role/status are intentionally not sent here — only the Users page
+    // (admin-only) touches those, and the database rejects the change
+    // server-side anyway if the caller isn't an admin.
+    const { role, status, email, createdAt, lastLogin, ...editable } = fields
+    const dbFields = {
+      name: editable.name,
+      department: editable.department,
+      designation: editable.designation,
+      phone: editable.phone,
+      avatar: editable.avatar,
+    }
+    const { data, error } = await supabase.from('profiles').update(dbFields).eq('id', id).select().single()
+    if (error) throw new Error(error.message)
+    const mapped = mapProfileToUser(data)
+    setUser(mapped)
+    return mapped
   }, [])
 
   const value = { user, loading, login, register, logout, updateUser }

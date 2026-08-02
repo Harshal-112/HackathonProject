@@ -42,9 +42,9 @@ export default function App() {
               <Route path="/documents" element={<DocumentListPage />} />
               <Route path="/documents/:id" element={<DocumentDetailsPage />} />
               <Route path="/search" element={<SearchPage />} />
-              <Route path="/approvals" element={<ApprovalsPage />} />
-              <Route path="/audit" element={<AuditTrailPage />} />
-              <Route path="/reports" element={<ReportsPage />} />
+              <Route path="/approvals" element={<ProtectedRoute roles={['admin', 'officer', 'verifier']}><ApprovalsPage /></ProtectedRoute>} />
+              <Route path="/audit" element={<ProtectedRoute roles={['admin', 'officer', 'verifier']}><AuditTrailPage /></ProtectedRoute>} />
+              <Route path="/reports" element={<ProtectedRoute roles={['admin', 'officer', 'verifier']}><ReportsPage /></ProtectedRoute>} />
               <Route path="/users" element={<ProtectedRoute roles={['admin']}><UsersPage /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute roles={['admin']}><SettingsPage /></ProtectedRoute>} />
               <Route path="/profile" element={<ProfilePage />} />
