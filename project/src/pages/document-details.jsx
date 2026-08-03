@@ -184,15 +184,45 @@ export default function DocumentDetailsPage() {
                 <CardContent className="space-y-4">
                   <div>
                     <p className="text-xs font-medium text-muted-foreground mb-1">AI Summary</p>
-                    <p className="text-sm">{doc.metadata?.summary}</p>
+                    <p className="text-sm">
+                      {doc.metadata?.organization}
+                      {doc.metadata?.subject &&
+                          ` • ${doc.metadata.subject}`}
+                      {doc.metadata?.post &&
+                          ` • ${doc.metadata.post}`}
+                  </p>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <MetaItem icon={Tag} label="Tags" value={doc.metadata?.tags?.join(', ')} />
-                    <MetaItem icon={Tag} label="Keywords" value={doc.metadata?.keywords?.join(', ')} />
-                    <MetaItem icon={User} label="Person Names" value={doc.metadata?.personNames?.join(', ') || '—'} />
-                    <MetaItem icon={MapPin} label="Location" value={doc.metadata?.location} />
-                    <MetaItem icon={FolderTree} label="Suggested Folder" value={doc.metadata?.suggestedFolder} />
-                    <MetaItem icon={Percent} label="Confidence Score" value={`${doc.metadata?.confidenceScore}%`} />
+                      <MetaItem
+                          icon={Building2}
+                          label="Organization"
+                          value={doc.metadata?.organization}
+                      />
+                      <MetaItem
+                          icon={FileText}
+                          label="Subject"
+                          value={doc.metadata?.subject}
+                      />
+                      <MetaItem
+                          icon={User}
+                          label="Post"
+                          value={doc.metadata?.post}
+                      />
+                      <MetaItem
+                          icon={FileSignature}
+                          label="Document Number"
+                          value={doc.metadata?.documentNumber}
+                      />
+                      <MetaItem
+                          icon={Languages}
+                          label="Language"
+                          value={doc.language}
+                      />
+                      <MetaItem
+                          icon={Percent}
+                          label="OCR Confidence"
+                          value={`${doc.ocrConfidence}%`}
+                      />
                   </div>
                   {doc.metadata?.importantDates?.length > 0 && (
                     <div>
@@ -259,8 +289,8 @@ export default function DocumentDetailsPage() {
             <CardHeader><CardTitle className="text-base">Document Info</CardTitle></CardHeader>
             <CardContent className="space-y-3">
               <InfoRow icon={FileText} label="File Name" value={doc.fileName} />
-              <InfoRow icon={Building2} label="Department" value={deptName} />
-              <InfoRow icon={FileText} label="Category" value={catName} />
+              <InfoRow icon={Building2} label="Organization" value={doc.metadata?.organization} />
+              <InfoRow icon={FileSignature} label="Document Number" value={doc.metadata?.documentNumber} />
               <InfoRow icon={Calendar} label="Uploaded" value={formatDate(doc.createdAt)} />
               <InfoRow icon={Clock} label="Last Updated" value={timeAgo(doc.updatedAt)} />
               <InfoRow icon={User} label="Uploaded By" value={doc.uploadedByName} />
@@ -323,7 +353,10 @@ function MetaItem({ icon: Icon, label, value }) {
       <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground mb-1">
         <Icon className="h-3 w-3" /> {label}
       </div>
-      <p className="text-sm">{value || '—'}</p>
+
+      <p className="text-sm">
+        {value || "—"}
+      </p>
     </div>
   )
 }

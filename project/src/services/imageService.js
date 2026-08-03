@@ -1,3 +1,5 @@
+import cv from "@techstark/opencv-js";
+
 function toGrayscale(canvas) {
   const ctx = canvas.getContext('2d')
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
@@ -74,16 +76,82 @@ export function enhanceContrast(sourceCanvasOrImage) {
   return canvas
 }
 
+export function sharpen(canvas) {
+  const ctx = canvas.getContext("2d");
+
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+
+  const amount = 20;
+
+  for (let i = 0; i < data.length; i += 4) {
+    data[i] = Math.min(255, data[i] + amount);
+    data[i + 1] = Math.min(255, data[i + 1] + amount);
+    data[i + 2] = Math.min(255, data[i + 2] + amount);
+  }
+
+  ctx.putImageData(imageData, 0, 0);
+
+  return canvas;
+}
+
 export async function fileToCanvas(file) {
   return new Promise((resolve, reject) => {
     const img = new Image()
+
     img.onload = () => {
-      const canvas = document.createElement('canvas')
-      canvas.width = img.width
-      canvas.height = img.height
-      canvas.getContext('2d').drawImage(img, 0, 0)
+
+      const MAX_WIDTH = 2200
+      const SCALE = img.width < 1500 ? 2 : 1
+
+      let width = img.width * SCALE
+      let height = img.height * SCALE
+
+      if (width > MAX_WIDTH) {
+        const ratio = MAX_WIDTH / width
+        width *= ratio
+        height *= ratio
+      }
+
+      const canvas = document.createElement("canvas")
+
+      canvas.width = Math.round(width)
+      canvas.height = Math.round(height)
+
+      const ctx = canvas.getContext("2d")
+
+      ctx.imageSmoothingEnabled = true
+      ctx.imageSmoothingQuality = "high"
+
+      ctx.drawImage(
+        img,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      )
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+
+      for (let i = 0; i < data.length; i += 4) {
+          const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+
+          if (avg > 240) {
+              data[i] = 255;
+              data[i + 1] = 255;
+              data[i + 2] = 255;
+          } else if (avg < 20) {
+              data[i] = 0;
+              data[i + 1] = 0;
+              data[i + 2] = 0;
+          }
+      }
+
+      ctx.putImageData(imageData, 0, 0);
+
       resolve(canvas)
     }
+
     img.onerror = reject
     img.src = URL.createObjectURL(file)
   })

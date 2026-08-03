@@ -247,13 +247,16 @@ export const mockApi = {
     const deptObj = DEPARTMENTS.find((d) => d.id === dept)
     const cat = CATEGORIES.find((c) => c.id === metadata.category) || CATEGORIES[Math.floor(Math.random() * CATEGORIES.length)]
     const priority = PRIORITIES.find((p) => p.id === metadata.priority) || PRIORITIES[Math.floor(Math.random() * PRIORITIES.length)]
+    console.log("OCR Data received:", ocrData);
     const row = {
-      title: metadata.title || file.name.replace(/\.[^.]+$/, ''),
+      title: ocrData?.metadata?.title || metadata.title || file.name.replace(/\.[^.]+$/, ''),
       file_name: file.name,
       file_type: file.name.split('.').pop().toLowerCase(),
       file_size: file.size,
-      category: cat.id,
-      department: dept,
+      category:
+        ocrData?.category?.toLowerCase() || cat.id,
+      department:
+        dept,
       priority: priority.id,
       status: 'pending',
       uploaded_by: user.id,
@@ -264,15 +267,47 @@ export const mockApi = {
       ocr_text: ocrData?.ocrText || `OCR extracted text from ${file.name}.\n\nThis is simulated OCR output.`,
       ocr_confidence: ocrData?.ocrConfidence ?? Math.floor(80 + Math.random() * 19),
       metadata: {
-        summary: `AI-generated summary of ${file.name}. This document has been automatically analyzed and classified.`,
-        tags: ['auto-tagged', cat.id, dept],
-        keywords: [cat.name, deptObj?.name, 'government'],
+
+        ...ocrData?.metadata,
+
+        title:
+            ocrData?.metadata?.title || "",
+
+        organization:
+            ocrData?.metadata?.organization || "",
+
+        subject:
+            ocrData?.metadata?.subject || "",
+
+        post:
+            ocrData?.metadata?.post || "",
+
+        documentNumber:
+            ocrData?.metadata?.documentNumber || "",
+
+        summary:
+            "",
+
+        tags: [],
+
+        keywords: [],
+
         personNames: [],
+
         addresses: [],
-        importantDates: ocrData?.metadata?.importantDates || [],
-        location: ocrData?.metadata?.location || 'Pune',
-        suggestedFolder: `${deptObj?.name}/${cat.name}`,
-        confidenceScore: ocrData?.ocrConfidence ?? Math.floor(80 + Math.random() * 19),
+
+        importantDates:
+            ocrData?.metadata?.importantDates || [],
+
+        location:
+            ocrData?.metadata?.location || "",
+
+        suggestedFolder:
+            "",
+
+        confidenceScore:
+            ocrData?.ocrConfidence ?? 0
+
       },
       versions: [{ version: 1, uploadedAt: new Date().toISOString(), uploadedBy: user.name, fileSize: file.size, note: 'Initial upload' }],
       approvals: [],
@@ -280,6 +315,7 @@ export const mockApi = {
     const { data, error } = await supabase.from('documents').insert(row).select().single()
     ok(error)
     const doc = toDoc(data)
+    console.log("Inserted document:", doc);
     await logAction(user, 'UPLOAD', 'Uploaded document', doc)
     await addNotification(user.id, 'upload', 'Upload Successful', `Document "${doc.title}" uploaded and OCR completed`)
     return doc

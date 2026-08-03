@@ -1,6 +1,10 @@
 import Tesseract from 'tesseract.js'
 import { pdfToImages, isPdf } from './pdfService'
-import { enhanceContrast, fileToCanvas } from './imageService'
+import {
+  enhanceContrast,
+  fileToCanvas,
+  sharpen
+} from './imageService'
 import { createWorker } from 'tesseract.js'
 
 const LANG = 'eng+mar+hin'
@@ -14,7 +18,10 @@ export async function extractText(file, onProgress) {
     rawSources = [await fileToCanvas(file)]
   }
 
-  const sources = rawSources.map((canvas) => enhanceContrast(canvas))
+  const sources = rawSources.map((canvas) => {
+    const enhanced = enhanceContrast(canvas);
+    return sharpen(enhanced);
+});
 
   const worker = await createWorker(['eng', 'mar', 'hin'], 1, {
     langPath: window.location.origin + '/tessdata',
@@ -25,7 +32,15 @@ export async function extractText(file, onProgress) {
       }
     },
   })
+  await worker.setParameters({
+    user_defined_dpi: "300"
+  });
 
+  await worker.setParameters({
+    tessedit_pageseg_mode: "6",
+    preserve_interword_spaces: "1",
+    tessedit_char_blacklist: "~`^"
+  });
   const pages = []
   let confidenceSum = 0
   for (let i = 0; i < sources.length; i++) {
