@@ -214,6 +214,13 @@ export default function DocumentDetailsPage() {
                           value={doc.metadata?.documentNumber}
                       />
                       <MetaItem
+                          icon={Tag}
+                          label="Keywords"
+                          value={
+                              doc.metadata?.keywords?.join(", ")
+                          }
+                      />
+                      <MetaItem
                           icon={Languages}
                           label="Language"
                           value={doc.language}

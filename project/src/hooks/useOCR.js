@@ -3,6 +3,7 @@ import { extractText } from '@/services/ocrService'
 import { generateMetadata } from '@/services/metadataService'
 import { classifyDocument } from '@/services/documentClassifier'
 import { parseDocument } from '@/services/documentParser'
+import { generateSummary } from '@/services/summaryService'
 
 export function useOCR() {
   const [progress, setProgress] = useState(0)
@@ -22,6 +23,11 @@ export function useOCR() {
       console.log("Parsed Document:", parsed);
       const classification = classifyDocument(ocrResult.fullText);
       console.log("Classification:", classification);
+      const summary = generateSummary(
+          parsed,
+          classification
+      );
+      console.log("Summary:", summary);
       return {
         ocrText: ocrResult.fullText,
         ocrConfidence: ocrResult.ocrConfidence,
@@ -30,6 +36,7 @@ export function useOCR() {
         documentType: classification.type,
         category: classification.category,
         metadata: {
+          summary,
           ...parsed,
           importantDates: meta.importantDates,
           flaggedDates: meta.flaggedDates,

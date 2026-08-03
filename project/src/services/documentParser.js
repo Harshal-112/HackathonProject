@@ -10,6 +10,7 @@ import {
   extractDates,
   detectLanguage
 } from "./metadataService";
+import { extractKeywords } from "./keywordService";
 
 export function parseDocument(text) {
 
@@ -19,6 +20,8 @@ export function parseDocument(text) {
 
     organization: extractOrganization(text),
 
+    keywords: extractKeywords(text),
+    
     subject: extractSubject(text),
 
     post: extractPost(text),
