@@ -26,6 +26,7 @@ export async function extractText(file, onProgress) {
   const worker = await createWorker(['eng', 'mar', 'hin'], 1, {
     langPath: window.location.origin + '/tessdata',
     cachePath: window.location.origin + '/tessdata',
+    corePath: window.location.origin + '/tesseract-core/tesseract-core-simd-lstm.wasm.js',
     logger: (m) => {
       if (onProgress && m.status === 'recognizing text') {
         onProgress(Math.round(m.progress * 100))
