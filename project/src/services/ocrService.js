@@ -19,8 +19,8 @@ export async function extractText(file, onProgress) {
   }
 
   const sources = rawSources.map((canvas) => {
-    const enhanced = enhanceContrast(canvas);
-    return sharpen(enhanced);
+    const sharpened = sharpen(canvas);
+    return enhanceContrast(sharpened);
 });
 
   const worker = await createWorker(['eng', 'mar', 'hin'], 1, {
@@ -37,7 +37,7 @@ export async function extractText(file, onProgress) {
   });
 
   await worker.setParameters({
-    tessedit_pageseg_mode: "6",
+    tessedit_pageseg_mode: "3", // fully automatic page segmentation — handles letterheads/stamps/multi-region layouts; PSM 6 assumed one uniform block and mishandled mixed layouts
     preserve_interword_spaces: "1",
     tessedit_char_blacklist: "~`^"
   });

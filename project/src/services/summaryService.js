@@ -2,9 +2,10 @@ export function generateSummary(metadata, classification) {
 
     const parts = [];
 
-    if (classification?.type) {
+    if (classification?.type && classification.type !== "Other") {
+        const article = /^[aeiou]/i.test(classification.type) ? "an" : "a";
         parts.push(
-            `This is a ${classification.type.toLowerCase()}.`
+            `This document was classified as ${article} ${classification.type}.`
         );
     }
 
@@ -36,6 +37,10 @@ export function generateSummary(metadata, classification) {
         parts.push(
             `Important Date: ${metadata.importantDates[0]}.`
         );
+    }
+
+    if (!parts.length) {
+        return "This document's content couldn't be reliably identified from OCR. Please review it manually and fill in any missing details."
     }
 
     return parts.join(" ");

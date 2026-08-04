@@ -7,9 +7,17 @@ export function isPdf(file) {
   return file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
 }
 
+const ASSET_BASE = window.location.origin + '/pdfjs/'
+
 export async function pdfToImages(file, scale = 2) {
   const arrayBuffer = await file.arrayBuffer()
-  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
+  const pdf = await pdfjsLib.getDocument({
+    data: arrayBuffer,
+    wasmUrl: ASSET_BASE + 'wasm/',
+    cMapUrl: ASSET_BASE + 'cmaps/',
+    cMapPacked: true,
+    standardFontDataUrl: ASSET_BASE + 'standard_fonts/',
+  }).promise
   const images = []
   for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
     const page = await pdf.getPage(pageNum)
