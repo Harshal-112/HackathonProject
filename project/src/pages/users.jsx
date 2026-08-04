@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Users, UserPlus, Search, Edit, Trash2, Shield, Mail, Phone, Building2,
-  MoreHorizontal, X, CheckCircle2, XCircle,
+  MoreHorizontal, X, CheckCircle2, XCircle, ShieldCheck,
 } from 'lucide-react'
 import { mockApi } from '@/lib/mock-api'
 import { useAuth } from '@/lib/auth-context'
@@ -97,10 +97,14 @@ export default function UsersPage() {
   }
 
   const toggleStatus = async (u) => {
+    // pending -> active is an approval, not a reactivation, but it's the
+    // same underlying change so we can reuse one handler.
+    const nextStatus = u.status === 'active' ? 'inactive' : 'active'
+    const verb = u.status === 'pending' ? 'approved' : nextStatus === 'active' ? 'activated' : 'deactivated'
     try {
-      await mockApi.updateUser(u.id, { status: u.status === 'active' ? 'inactive' : 'active' })
+      await mockApi.updateUser(u.id, { status: nextStatus })
       fetchUsers()
-      toast({ title: 'Status updated', description: `${u.name} is now ${u.status === 'active' ? 'deactivated' : 'activated'}`, variant: 'success' })
+      toast({ title: 'Status updated', description: `${u.name} is now ${verb}`, variant: 'success' })
     } catch (err) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' })
     }
@@ -115,9 +119,10 @@ export default function UsersPage() {
       </PageHeader>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <StatCard label="Total Users" value={users.length} />
         <StatCard label="Active" value={users.filter((u) => u.status === 'active').length} color="text-success" />
+        <StatCard label="Pending Approval" value={users.filter((u) => u.status === 'pending').length} color="text-amber-600" />
         <StatCard label="Inactive" value={users.filter((u) => u.status === 'inactive').length} color="text-muted-foreground" />
         <StatCard label="Admins" value={users.filter((u) => u.role === 'admin').length} color="text-primary" />
       </div>
@@ -184,12 +189,20 @@ export default function UsersPage() {
                       </td>
                       <td className="p-3 text-sm">{DEPARTMENTS.find((d) => d.id === u.department)?.name || u.department}</td>
                       <td className="p-3">
-                        <button onClick={() => toggleStatus(u)}>
-                          <Badge variant={u.status === 'active' ? 'success' : 'secondary'}>
-                            {u.status === 'active' ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
-                            {u.status}
-                          </Badge>
-                        </button>
+                        {u.status === 'pending' ? (
+                          <button onClick={() => toggleStatus(u)} title="Approve this verifier account">
+                            <Badge variant="outline" className="border-amber-500 text-amber-600 gap-1">
+                              <ShieldCheck className="h-3 w-3" /> Approve
+                            </Badge>
+                          </button>
+                        ) : (
+                          <button onClick={() => toggleStatus(u)}>
+                            <Badge variant={u.status === 'active' ? 'success' : 'secondary'}>
+                              {u.status === 'active' ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+                              {u.status}
+                            </Badge>
+                          </button>
+                        )}
                       </td>
                       <td className="p-3 text-sm text-muted-foreground">{u.lastLogin ? formatDate(u.lastLogin) : 'Never'}</td>
                       <td className="p-3">

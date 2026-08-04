@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import {
   ArrowLeft, FileText, Download, Edit, Trash2, Clock, User, Building2,
   Calendar, Languages, ScanText, Brain, Tag, MapPin, FolderTree,
-  Percent, FileSignature, History, Save, X, MessageSquare,
+  Percent, FileSignature, History, Save, X, MessageSquare, Mail, Phone, Hash,
 } from 'lucide-react'
 import { mockApi } from '@/lib/mock-api'
 import { useAuth } from '@/lib/auth-context'
@@ -185,12 +185,8 @@ export default function DocumentDetailsPage() {
                   <div>
                     <p className="text-xs font-medium text-muted-foreground mb-1">AI Summary</p>
                     <p className="text-sm">
-                      {doc.metadata?.organization}
-                      {doc.metadata?.subject &&
-                          ` • ${doc.metadata.subject}`}
-                      {doc.metadata?.post &&
-                          ` • ${doc.metadata.post}`}
-                  </p>
+                      {doc.metadata?.summary || 'No summary could be generated for this document.'}
+                    </p>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                       <MetaItem
@@ -228,7 +224,32 @@ export default function DocumentDetailsPage() {
                       <MetaItem
                           icon={Percent}
                           label="OCR Confidence"
-                          value={`${doc.ocrConfidence}%`}
+                          value={doc.ocrConfidence != null ? `${doc.ocrConfidence}%` : null}
+                      />
+                      <MetaItem
+                          icon={Percent}
+                          label="Classification Confidence"
+                          value={doc.metadata?.classificationConfidence != null ? `${doc.metadata.classificationConfidence}%` : null}
+                      />
+                      <MetaItem
+                          icon={Mail}
+                          label="Emails Found"
+                          value={doc.metadata?.emails?.join(', ')}
+                      />
+                      <MetaItem
+                          icon={Phone}
+                          label="Phone Numbers Found"
+                          value={doc.metadata?.phones?.join(', ')}
+                      />
+                      <MetaItem
+                          icon={Hash}
+                          label="Reference Numbers"
+                          value={doc.metadata?.referenceNumbers?.join(', ')}
+                      />
+                      <MetaItem
+                          icon={MapPin}
+                          label="Location"
+                          value={doc.metadata?.location}
                       />
                   </div>
                   {doc.metadata?.importantDates?.length > 0 && (
@@ -237,6 +258,19 @@ export default function DocumentDetailsPage() {
                       <div className="flex flex-wrap gap-2">
                         {doc.metadata.importantDates.map((d, i) => (
                           <Badge key={i} variant="outline">{formatDate(d)}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {doc.metadata?.flaggedDates?.length > 0 && (
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground mb-1 flex items-center gap-1">
+                        Dates Needing Review
+                        <span className="text-muted-foreground/70">(OCR found these but couldn't confirm they're valid)</span>
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {doc.metadata.flaggedDates.map((d, i) => (
+                          <Badge key={i} variant="secondary">{d}</Badge>
                         ))}
                       </div>
                     </div>

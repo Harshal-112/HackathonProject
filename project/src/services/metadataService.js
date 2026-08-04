@@ -72,6 +72,13 @@ export function extractReferenceNumbers(text) {
 
 export function extractTitle(text) {
 
+  // Prefer an actual subject line if the document has one — that's a much
+  // more reliable "title" than guessing from the first plausible-looking line.
+  const subjectMatch = text.match(/(?:Subject|विषय)\s*[:：]?\s*[-–]?\s*(.+)/i)
+  if (subjectMatch && subjectMatch[1].trim().length >= 8) {
+    return subjectMatch[1].trim()
+  }
+
   const lines = text
     .split("\n")
     .map(line => line.trim())
@@ -96,6 +103,13 @@ export function extractTitle(text) {
 
     if (/email/i.test(line)) continue;
 
+    // Skip lines that are really just an email address, a URL, or a bare
+    // reference/outward number — these were being picked up as "titles"
+    // when they were the only long-enough line before real content.
+    if (/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/.test(line)) continue;
+    if (/https?:\/\/|www\.|\.(com|in|org|net)\b/i.test(line)) continue;
+    if (/^(जा\.?\s*क्र\.?|जावक|outward|reference)/i.test(line)) continue;
+
     return line;
   }
 
@@ -109,7 +123,7 @@ export function extractOrganization(text) {
     .map(line => line.trim())
     .filter(Boolean);
 
-  const patterns = [
+  const knownNames = [
     /Savitribai Phule Pune University/i,
     /University of Pune/i,
     /Government of Maharashtra/i,
@@ -120,15 +134,21 @@ export function extractOrganization(text) {
   ];
 
   for (const line of lines) {
-
-    for (const pattern of patterns) {
-
-      if (pattern.test(line)) {
-        return line;
-      }
-
+    for (const pattern of knownNames) {
+      if (pattern.test(line)) return line;
     }
+  }
 
+  // Fallback: known names only cover 7 specific organizations. Most
+  // documents this app handles are from generic government offices
+  // (Gram Panchayat, Tehsil, Collector's office, etc.) that will never
+  // match a fixed whitelist. Instead, look for a line containing a common
+  // office/department keyword in Marathi, Hindi, or English.
+  const officeKeywords = /(कार्यालय|विभाग|पंचायत|महाविद्यालय|विद्यापीठ|तहसील|जिल्हा परिषद|महालेखापाल|शासन|सरकार|office|department|collector|university|college)/i
+  for (const line of lines) {
+    if (officeKeywords.test(line) && line.length >= 5 && line.length <= 120) {
+      return line
+    }
   }
 
   return "";
@@ -136,7 +156,8 @@ export function extractOrganization(text) {
 
 export function extractSubject(text) {
 
-  const match = text.match(/Subject\s*:\s*(.+)/i);
+  // English "Subject:" plus Marathi/Hindi equivalents (विषय / विषयः).
+  const match = text.match(/(?:Subject|विषय)\s*[:：]?\s*[-–]?\s*(.+)/i);
 
   if (match) {
     return match[1].trim();
@@ -147,7 +168,8 @@ export function extractSubject(text) {
 
 export function extractPost(text) {
 
-  const match = text.match(/Post\s*:\s*(.+)/i);
+  // English "Post:" plus Marathi "पद" (post/designation).
+  const match = text.match(/(?:Post|पद)\s*[:：]?\s*(.+)/i);
 
   if (match) {
     return match[1].trim();
@@ -158,15 +180,19 @@ export function extractPost(text) {
 
 export function extractDocumentNumber(text) {
 
-  const match = text.match(
-    /Outward\s*No\.?\s*:\s*([A-Za-z]{1,5}\s*\/\s*\d+)/i
-  );
+  // English "Outward No." plus common Marathi/Hindi reference-number
+  // labels: जा.क्र. / जावक क्रमांक (outward no.), क्रमांक (number).
+  const patterns = [
+    /Outward\s*No\.?\s*:\s*([A-Za-z]{1,5}\s*\/\s*\d+)/i,
+    /(?:जा\.?\s*क्र\.?|जावक\s*क्रमांक|क्रमांक)\s*[:：]?\s*([A-Za-z0-9\u0900-\u097F\/\-]{2,30})/,
+  ];
 
-  if (!match) {
-    return "";
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (match) return match[1].replace(/\s+/g, "");
   }
 
-  return match[1].replace(/\s+/g, "");
+  return "";
 }
 
 export function generateMetadata(fullText) {

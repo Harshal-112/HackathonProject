@@ -70,6 +70,10 @@ export function AuthProvider({ children }) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw new Error(error.message)
     const profile = await fetchProfile(data.user.id)
+    if (profile.status === 'pending') {
+      await supabase.auth.signOut()
+      throw new Error('Your verifier account is awaiting admin approval.')
+    }
     if (profile.status !== 'active') {
       await supabase.auth.signOut()
       throw new Error('Account is deactivated. Contact administrator.')
@@ -101,6 +105,10 @@ export function AuthProvider({ children }) {
       throw new Error('Account created. Check your email to confirm before logging in.')
     }
     const profile = await fetchProfile(data.user.id)
+    if (profile.status === 'pending') {
+      await supabase.auth.signOut()
+      throw new Error('Account created. A verifier account needs admin approval before you can log in — check back once approved.')
+    }
     setUser(profile)
     return profile
   }, [])

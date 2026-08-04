@@ -77,22 +77,48 @@ export function enhanceContrast(sourceCanvasOrImage) {
 }
 
 export function sharpen(canvas) {
-  const ctx = canvas.getContext("2d");
+  // The previous version just added +20 brightness to every pixel — that's
+  // not sharpening, it does nothing for character edge clarity, and it
+  // actively washes out contrast on already-good scans. This applies a real
+  // unsharp-mask convolution (a standard OCR preprocessing technique) that
+  // crisps up letter edges, which measurably helps Tesseract on soft or
+  // slightly blurry phone-camera captures.
+  const ctx = canvas.getContext('2d')
+  const { width, height } = canvas
+  const src = ctx.getImageData(0, 0, width, height)
+  const out = ctx.createImageData(width, height)
+  const s = src.data
+  const d = out.data
 
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const data = imageData.data;
+  // 3x3 unsharp mask kernel: center 5, orthogonal neighbors -1
+  const kernel = [0, -1, 0, -1, 5, -1, 0, -1, 0]
 
-  const amount = 20;
-
-  for (let i = 0; i < data.length; i += 4) {
-    data[i] = Math.min(255, data[i] + amount);
-    data[i + 1] = Math.min(255, data[i + 1] + amount);
-    data[i + 2] = Math.min(255, data[i + 2] + amount);
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const idx = (y * width + x) * 4
+      for (let c = 0; c < 3; c++) {
+        // Edge pixels: just copy through, skip convolution.
+        if (x === 0 || y === 0 || x === width - 1 || y === height - 1) {
+          d[idx + c] = s[idx + c]
+          continue
+        }
+        let sum = 0
+        let k = 0
+        for (let ky = -1; ky <= 1; ky++) {
+          for (let kx = -1; kx <= 1; kx++) {
+            const nIdx = ((y + ky) * width + (x + kx)) * 4 + c
+            sum += s[nIdx] * kernel[k]
+            k++
+          }
+        }
+        d[idx + c] = Math.max(0, Math.min(255, sum))
+      }
+      d[idx + 3] = s[idx + 3]
+    }
   }
 
-  ctx.putImageData(imageData, 0, 0);
-
-  return canvas;
+  ctx.putImageData(out, 0, 0)
+  return canvas
 }
 
 export async function fileToCanvas(file) {
@@ -130,24 +156,6 @@ export async function fileToCanvas(file) {
         canvas.width,
         canvas.height
       )
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imageData.data;
-
-      for (let i = 0; i < data.length; i += 4) {
-          const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
-
-          if (avg > 240) {
-              data[i] = 255;
-              data[i + 1] = 255;
-              data[i + 2] = 255;
-          } else if (avg < 20) {
-              data[i] = 0;
-              data[i + 1] = 0;
-              data[i + 2] = 0;
-          }
-      }
-
-      ctx.putImageData(imageData, 0, 0);
 
       resolve(canvas)
     }

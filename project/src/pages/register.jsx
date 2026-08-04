@@ -181,9 +181,14 @@ export default function RegisterPage() {
                   id="role"
                   value={form.role}
                   onChange={(v) => setField('role', v)}
-                  options={ROLES.map((r) => ({ value: r.id, label: r.name }))}
+                  options={ROLES.filter((r) => r.id !== 'admin').map((r) => ({ value: r.id, label: r.name }))}
                   className="mt-1.5"
                 />
+                {form.role === 'verifier' && (
+                  <p className="text-xs text-amber-600 mt-1.5">
+                    Verifier accounts need admin approval before you can log in.
+                  </p>
+                )}
               </div>
               <div>
                 <Label htmlFor="department">Department</Label>

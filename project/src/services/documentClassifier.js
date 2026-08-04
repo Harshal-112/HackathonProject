@@ -5,7 +5,10 @@ export function classifyDocument(text) {
     if (
         t.includes("invoice") ||
         t.includes("gst") ||
-        t.includes("tax invoice")
+        t.includes("tax invoice") ||
+        t.includes("पावती") ||
+        t.includes("बिल") ||
+        t.includes("देयक")
     ) {
         return {
             type: "Invoice",
@@ -16,7 +19,9 @@ export function classifyDocument(text) {
 
     if (
         t.includes("aadhaar") ||
-        t.includes("unique identification authority")
+        t.includes("unique identification authority") ||
+        t.includes("आधार") ||
+        t.includes("आधार कार्ड")
     ) {
         return {
             type: "Aadhaar Card",
@@ -26,7 +31,8 @@ export function classifyDocument(text) {
     }
 
     if (
-        t.includes("passport")
+        t.includes("passport") ||
+        t.includes("पारपत्र")
     ) {
         return {
             type: "Passport",
@@ -39,7 +45,11 @@ export function classifyDocument(text) {
         t.includes("savitribai") ||
         t.includes("university") ||
         t.includes("professor") ||
-        t.includes("registrar")
+        t.includes("registrar") ||
+        t.includes("विद्यापीठ") ||
+        t.includes("महाविद्यालय") ||
+        t.includes("प्राध्यापक") ||
+        t.includes("कुलसचिव")
     ) {
         return {
             type: "University Document",
@@ -49,12 +59,33 @@ export function classifyDocument(text) {
     }
 
     if (
-        t.includes("certificate")
+        t.includes("certificate") ||
+        t.includes("प्रमाणपत्र") ||
+        t.includes("दाखला")
     ) {
         return {
             type: "Certificate",
             category: "Education",
             confidence: 90
+        };
+    }
+
+    if (
+        t.includes("government of maharashtra") ||
+        t.includes("शासन") ||
+        t.includes("सरकार") ||
+        t.includes("जिल्हा परिषद") ||
+        t.includes("ग्रामपंचायत") ||
+        t.includes("पंचायत") ||
+        t.includes("तहसील") ||
+        t.includes("महालेखापाल") ||
+        t.includes("कार्यालय") ||
+        t.includes("विभाग")
+    ) {
+        return {
+            type: "Government Order/Letter",
+            category: "Administration",
+            confidence: 80
         };
     }
 
