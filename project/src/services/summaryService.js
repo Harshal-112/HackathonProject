@@ -1,47 +1,70 @@
+// ---------------------------------------------------------------------------
+// summaryService.js — Richer rule-based document summaries
+//
+// This is used as fallback when AI (Gemini) summary is not available.
+// When AI is available, generateAISummary() in aiService.js is used instead.
+// ---------------------------------------------------------------------------
+
 export function generateSummary(metadata, classification) {
+  const parts = []
 
-    const parts = [];
+  // Document type
+  if (classification?.type && classification.type !== 'Other') {
+    const article = /^[aeiou]/i.test(classification.type) ? 'an' : 'a'
+    const conf = classification.confidence ? ` (${classification.confidence}% confidence)` : ''
+    parts.push(`This document was classified as ${article} **${classification.type}**${conf}.`)
+  }
 
-    if (classification?.type && classification.type !== "Other") {
-        const article = /^[aeiou]/i.test(classification.type) ? "an" : "a";
-        parts.push(
-            `This document was classified as ${article} ${classification.type}.`
-        );
-    }
+  // Issuer
+  if (metadata.organization) {
+    parts.push(`Issued by ${metadata.organization}.`)
+  }
 
-    if (metadata.organization) {
-        parts.push(
-            `Issued by ${metadata.organization}.`
-        );
-    }
+  // Subject
+  if (metadata.subject) {
+    parts.push(`Subject: ${metadata.subject}.`)
+  }
 
-    if (metadata.subject) {
-        parts.push(
-            `Subject: ${metadata.subject}.`
-        );
-    }
+  // Post/role
+  if (metadata.post) {
+    parts.push(`Related to the post/designation: ${metadata.post}.`)
+  }
 
-    if (metadata.post) {
-        parts.push(
-            `Related to the post of ${metadata.post}.`
-        );
-    }
+  // Document/reference number
+  if (metadata.documentNumber) {
+    parts.push(`Primary reference number: ${metadata.documentNumber}.`)
+  } else if (metadata.referenceNumbers?.length) {
+    parts.push(`Reference number(s): ${metadata.referenceNumbers.slice(0, 2).join(', ')}.`)
+  }
 
-    if (metadata.documentNumber) {
-        parts.push(
-            `Reference Number: ${metadata.documentNumber}.`
-        );
-    }
+  // Important dates
+  if (metadata.importantDates?.length) {
+    const formatted = metadata.importantDates.slice(0, 2).map(d => {
+      try {
+        return new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
+      } catch { return d }
+    })
+    parts.push(`Key date(s): ${formatted.join(', ')}.`)
+  }
 
-    if (metadata.importantDates?.length) {
-        parts.push(
-            `Important Date: ${metadata.importantDates[0]}.`
-        );
-    }
+  // Location
+  if (metadata.location) {
+    parts.push(`Location: ${metadata.location}.`)
+  }
 
-    if (!parts.length) {
-        return "This document's content couldn't be reliably identified from OCR. Please review it manually and fill in any missing details."
-    }
+  // Person names
+  if (metadata.personNames?.length) {
+    parts.push(`Persons mentioned: ${metadata.personNames.slice(0, 3).join(', ')}.`)
+  }
 
-    return parts.join(" ");
+  // Language
+  if (metadata.language && metadata.language !== 'English') {
+    parts.push(`Document language: ${metadata.language}.`)
+  }
+
+  if (!parts.length) {
+    return 'This document\'s content could not be reliably identified from OCR. Please review it manually and fill in any missing details.'
+  }
+
+  return parts.join(' ')
 }

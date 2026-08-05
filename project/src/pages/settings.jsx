@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import {
   Settings as SettingsIcon, Palette, Brain, ScanText, Building2,
-  FileType, Moon, Sun, Save, Plus, Trash2,
+  FileType, Moon, Sun, Save, Plus, Trash2, AlertCircle,
+  Bell, Shield, RefreshCw,
 } from 'lucide-react'
 import { mockApi } from '@/lib/mock-api'
+import { DEMO_SETTINGS } from '@/lib/mock-data'
 import { useToast } from '@/lib/toast-context'
 import { useTheme } from '@/lib/theme-context'
 import { PageHeader } from '@/components/shared/page-header'
@@ -21,12 +23,24 @@ export default function SettingsPage() {
   const { theme, setTheme } = useTheme()
   const [settings, setSettings] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [saving, setSaving] = useState(false)
   const [newDept, setNewDept] = useState({ name: '', code: '' })
   const [newCat, setNewCat] = useState({ name: '', color: '#1e40af' })
 
   useEffect(() => {
-    mockApi.getSettings().then((s) => { setSettings(s); setLoading(false) })
+    setLoading(true)
+    mockApi.getSettings()
+      .then((s) => {
+        setSettings(s && Object.keys(s).length ? s : DEMO_SETTINGS)
+        setLoading(false)
+      })
+      .catch((err) => {
+        console.error('Settings load error:', err)
+        setError(err.message)
+        setSettings(DEMO_SETTINGS)
+        setLoading(false)
+      })
   }, [])
 
   const handleSave = async (section) => {
@@ -69,13 +83,30 @@ export default function SettingsPage() {
     setSettings({ ...settings, categories: settings.categories.filter((c) => c.id !== id) })
   }
 
-  if (loading || !settings) {
-    return <div className="space-y-4"><Skeleton className="h-8 w-48" /><Skeleton className="h-96" /></div>
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-12 w-full max-w-lg" />
+        <Skeleton className="h-96" />
+      </div>
+    )
   }
 
   return (
     <div className="space-y-6">
       <PageHeader title="Settings" description="Configure system preferences, AI, OCR, and organizational structure" />
+
+      {error && (
+        <div className="flex items-start gap-3 rounded-lg border border-warning/40 bg-warning/10 p-4">
+          <AlertCircle className="h-5 w-5 text-warning shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-medium text-warning">Using local settings</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Could not reach the database. Changes will be saved locally in this browser.</p>
+          </div>
+          <button onClick={() => setError(null)} className="ml-auto text-muted-foreground hover:text-foreground text-xs">✕</button>
+        </div>
+      )}
 
       <Tabs defaultValue="general">
         <TabsList>
@@ -84,6 +115,7 @@ export default function SettingsPage() {
           <TabsTrigger value="ocr">OCR Settings</TabsTrigger>
           <TabsTrigger value="departments">Departments</TabsTrigger>
           <TabsTrigger value="categories">Categories</TabsTrigger>
+          <TabsTrigger value="notifications">Notifications</TabsTrigger>
         </TabsList>
 
         {/* General */}
@@ -325,6 +357,48 @@ export default function SettingsPage() {
               </div>
               <Button onClick={() => handleSave('Categories')} disabled={saving}>
                 <Save className="h-4 w-4" /> {saving ? 'Saving...' : 'Save Categories'}
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        {/* Notifications */}
+        <TabsContent value="notifications">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Bell className="h-4 w-4 text-primary" /> Notification Preferences
+              </CardTitle>
+              <CardDescription>Control when and how you receive alerts</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3">
+                <Toggle
+                  label="Document Approval Alerts"
+                  desc="Notify when a document is approved or rejected"
+                  checked={settings.notifications?.approvals ?? true}
+                  onChange={(v) => setSettings({ ...settings, notifications: { ...settings.notifications, approvals: v } })}
+                />
+                <Toggle
+                  label="Upload Notifications"
+                  desc="Confirm successful document uploads"
+                  checked={settings.notifications?.uploads ?? true}
+                  onChange={(v) => setSettings({ ...settings, notifications: { ...settings.notifications, uploads: v } })}
+                />
+                <Toggle
+                  label="System Alerts"
+                  desc="Critical system events and maintenance notices"
+                  checked={settings.notifications?.system ?? true}
+                  onChange={(v) => setSettings({ ...settings, notifications: { ...settings.notifications, system: v } })}
+                />
+                <Toggle
+                  label="Email Notifications"
+                  desc="Send notifications to your registered email address"
+                  checked={settings.notifications?.email ?? false}
+                  onChange={(v) => setSettings({ ...settings, notifications: { ...settings.notifications, email: v } })}
+                />
+              </div>
+              <Button onClick={() => handleSave('Notifications')} disabled={saving}>
+                <Save className="h-4 w-4" /> {saving ? 'Saving...' : 'Save Preferences'}
               </Button>
             </CardContent>
           </Card>

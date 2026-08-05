@@ -26,10 +26,9 @@ export default function DashboardPage() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    mockApi.getDashboardStats(user).then((d) => {
-      setData(d)
-      setLoading(false)
-    })
+    mockApi.getDashboardStats(user)
+      .then((d) => { setData(d); setLoading(false) })
+      .catch(() => setLoading(false))
   }, [user])
 
   if (loading) return <DashboardSkeleton />

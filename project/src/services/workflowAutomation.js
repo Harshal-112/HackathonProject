@@ -22,26 +22,47 @@
 // *why* something was auto-routed — good for judges, good for trust.
 // ---------------------------------------------------------------------------
 
-// classifyDocument()'s `category` field -> real CATEGORIES id used by the DB/UI.
+// classifyDocument()'s `type` field -> real CATEGORIES id used by the DB/UI.
 // (CATEGORIES ids are: land, license, certificate, application, notice,
 // register, report, correspondence — see src/lib/mock-data.js)
 const CLASSIFIER_TYPE_TO_CATEGORY_ID = {
   'Invoice': 'report',
   'Aadhaar Card': 'certificate',
   'Passport': 'certificate',
+  'PAN Card': 'certificate',
+  'Ration Card': 'certificate',
+  'Voter ID': 'certificate',
+  'Driving Licence': 'license',
+  'Birth Certificate': 'certificate',
+  'Death Certificate': 'certificate',
+  'Marriage Certificate': 'certificate',
+  'Caste Certificate': 'certificate',
+  'Income Certificate': 'certificate',
+  'Domicile Certificate': 'certificate',
+  'Affidavit': 'certificate',
+  'Court Order': 'notice',
+  'Land Record (7/12)': 'land',
+  'Property Card': 'land',
+  'NOC': 'certificate',
+  'Trade License': 'license',
+  'FIR': 'notice',
   'University Document': 'certificate',
   'Certificate': 'certificate',
   'Government Order/Letter': 'notice',
+  'Report': 'report',
+  'Application': 'application',
   'Other': 'correspondence',
 }
 
 // classifyDocument()'s broad `category` -> best-guess DEPARTMENTS id.
-// Feel free to tune these to match your actual demo documents.
 const CLASSIFIER_CATEGORY_TO_DEPARTMENT_ID = {
   Finance: 'revenue',
   Identity: 'collector',
   Education: 'education',
   Administration: 'collector',
+  Land: 'revenue',
+  Health: 'health',
+  Legal: 'collector',
   General: 'collector',
 }
 
@@ -49,13 +70,13 @@ const CLASSIFIER_CATEGORY_TO_DEPARTMENT_ID = {
 // the broad category mapping above when present, because they're more
 // specific.
 const DEPARTMENT_KEYWORD_HINTS = [
-  { dept: 'rto', words: ['rto', 'transport', 'driving licence', 'driving license', 'vehicle registration', 'वाहन'] },
-  { dept: 'revenue', words: ['7/12', 'satbara', 'land record', 'revenue department', 'महसूल'] },
-  { dept: 'municipal', words: ['municipal corporation', 'municipal', 'नगरपालिका', 'महानगरपालिका'] },
-  { dept: 'panchayat', words: ['gram panchayat', 'ग्रामपंचायत', 'पंचायत'] },
-  { dept: 'health', words: ['health department', 'hospital', 'phc', 'आरोग्य'] },
-  { dept: 'agri', words: ['agriculture', 'crop', 'farmer', 'कृषी', 'शेतकरी'] },
-  { dept: 'education', words: ['university', 'college', 'school', 'शिक्षण', 'विद्यापीठ', 'महाविद्यालय'] },
+  { dept: 'rto', words: ['rto', 'transport', 'driving licence', 'driving license', 'vehicle registration', 'वाहन', 'चालक પરવાના', 'परवाना', 'मोटार'] },
+  { dept: 'revenue', words: ['7/12', 'satbara', 'land record', 'revenue department', 'महसूल', 'सातबारा', 'जमीन', 'गट क्र', 'खाते क्रमांक', 'तहसीलदार'] },
+  { dept: 'municipal', words: ['municipal corporation', 'municipal', 'नगरपालिका', 'महानगरपालिका', 'महापालिका', 'पाणीपट्टी', 'घरपट्टी'] },
+  { dept: 'panchayat', words: ['gram panchayat', 'ग्रामपंचायत', 'पंचायत समिति', 'पंचायत समिती', 'ग्रामविकास'] },
+  { dept: 'health', words: ['health department', 'hospital', 'phc', 'आरोग्य', 'वैद्यकीय', 'रुग्णालय', 'आरोग्य अधिकारी'] },
+  { dept: 'agri', words: ['agriculture', 'crop', 'farmer', 'कृषी', 'शेतकरी', 'पिक', 'शेती', 'कृषी अधिकारी'] },
+  { dept: 'education', words: ['university', 'college', 'school', 'शिक्षण', 'विद्यापीठ', 'महाविद्यालय', 'शाळा', 'प्राध्यापक', 'कुलसचिव', 'परीक्षा', 'गुणपत्रिका', 'scrutiny'] },
 ]
 
 const URGENT_KEYWORDS = [

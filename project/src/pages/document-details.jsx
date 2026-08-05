@@ -19,6 +19,7 @@ import { StatusBadge, PriorityBadge, CategoryBadge } from '@/components/shared/b
 import { Modal } from '@/components/ui/modal'
 import { DEPARTMENTS, CATEGORIES, PRIORITIES } from '@/lib/mock-data'
 import { formatDate, formatDateTime, formatBytes, timeAgo, cn } from '@/lib/utils'
+import { AIInsightsPanel } from '@/components/shared/ai-insights-panel'
 
 export default function DocumentDetailsPage() {
   const { id } = useParams()
@@ -326,6 +327,9 @@ export default function DocumentDetailsPage() {
 
         {/* Sidebar */}
         <div className="space-y-6">
+          {/* AI Insights Panel */}
+          <AIInsightsPanel doc={doc} />
+
           <Card>
             <CardHeader><CardTitle className="text-base">Document Info</CardTitle></CardHeader>
             <CardContent className="space-y-3">

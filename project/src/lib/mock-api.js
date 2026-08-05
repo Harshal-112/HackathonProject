@@ -3,6 +3,7 @@ import { DEPARTMENTS, CATEGORIES, PRIORITIES, DOC_STATUSES, ROLES } from './mock
 import { uid, paginate, sortBy } from './utils.js'
 import { smartSearch, parseQuery } from '../services/smartSearch.js'
 import { autoRouteDocument, isOverdue } from '../services/workflowAutomation.js'
+import { chatWithAI, isAIAvailable } from '../services/aiService.js'
 
 // ---------------------------------------------------------------------------
 // This file used to be a fake API that read/wrote everything to
@@ -93,18 +94,35 @@ function ok(error) {
 }
 
 async function logAction(user, action, description, doc = null) {
+  const docId = doc?.id || null
   const { error } = await supabase.from('audit_logs').insert({
     user_id: user?.id || null,
     user_name: user?.name || 'System',
     user_role: user?.role || 'system',
     action,
     description,
-    document_id: doc?.id || null,
+    document_id: docId,
     document_title: doc?.title || null,
-    ip_address: null, // not available client-side; would need a server function
+    ip_address: null,
     user_agent: navigator.userAgent,
   })
-  if (error) console.warn('audit log failed:', error.message)
+  if (error) {
+    if (docId) {
+      // Retry inserting log entry without the document_id foreign key constraint
+      await supabase.from('audit_logs').insert({
+        user_id: user?.id || null,
+        user_name: user?.name || 'System',
+        user_role: user?.role || 'system',
+        action,
+        description,
+        document_id: null,
+        document_title: doc?.title || null,
+        user_agent: navigator.userAgent,
+      }).catch(() => {})
+    } else {
+      console.warn('audit log failed:', error.message)
+    }
+  }
 }
 
 async function addNotification(userId, type, title, message) {
@@ -486,18 +504,56 @@ export const mockApi = {
   },
 
   // --- Settings (admin write, everyone read) ---------------------------
+  // Falls back to localStorage if the Supabase 'settings' table doesn't
+  // exist yet — prevents the blank/frozen page when the table is missing.
   async getSettings() {
-    const { data, error } = await supabase.from('settings').select('data').eq('id', 1).single()
-    ok(error)
-    return data?.data || {}
+    try {
+      const { data, error } = await supabase.from('settings').select('data').eq('id', 1).single()
+      if (!error && data?.data) {
+        // Cache a good copy locally so offline/table-missing still works
+        localStorage.setItem('sdds_settings', JSON.stringify(data.data))
+        return data.data
+      }
+    } catch (_) { /* fall through to local fallback */ }
+
+    // Local fallback: previously saved settings OR demo defaults
+    const cached = localStorage.getItem('sdds_settings')
+    if (cached) {
+      try { return JSON.parse(cached) } catch (_) { /* corrupt – use demo */ }
+    }
+    const { DEMO_SETTINGS } = await import('./mock-data.js')
+    return DEMO_SETTINGS
   },
 
   async updateSettings(patch) {
-    const { data: existing } = await supabase.from('settings').select('data').eq('id', 1).single()
-    const merged = { ...(existing?.data || {}), ...patch }
-    const { data, error } = await supabase.from('settings').update({ data: merged }).eq('id', 1).select('data').single()
-    ok(error)
-    return data?.data || {}
+    // Merge on top of whatever we can read
+    let existing = {}
+    try {
+      const { data } = await supabase.from('settings').select('data').eq('id', 1).single()
+      if (data?.data) existing = data.data
+    } catch (_) { /* use local */ }
+
+    if (!Object.keys(existing).length) {
+      const cached = localStorage.getItem('sdds_settings')
+      if (cached) { try { existing = JSON.parse(cached) } catch (_) {} }
+    }
+
+    const merged = { ...existing, ...patch }
+
+    // Persist locally first (always succeeds)
+    localStorage.setItem('sdds_settings', JSON.stringify(merged))
+
+    // Attempt Supabase write (silently ignored if table missing)
+    try {
+      const { data, error } = await supabase
+        .from('settings')
+        .upsert({ id: 1, data: merged })
+        .select('data')
+        .single()
+      if (!error && data?.data) return data.data
+    } catch (_) { /* fall through */ }
+
+    return merged
   },
 
   // --- Search / chat (client-side over whatever rows RLS returns you) --
@@ -517,8 +573,34 @@ export const mockApi = {
   async chatWithDocuments(message) {
     const { data } = await supabase.from('documents').select('*')
     const docs = (data || []).map(toDoc)
-    const q = message.toLowerCase()
     const lookups = { DEPARTMENTS, CATEGORIES, PRIORITIES, DOC_STATUSES }
+
+    // Try Gemini AI chat first (richer, contextual responses)
+    if (isAIAvailable()) {
+      try {
+        const summaries = docs.map((d) => ({
+          title: d.title,
+          documentNumber: d.documentNumber,
+          status: d.status,
+          priority: d.priority,
+          department: DEPARTMENTS.find((dep) => dep.id === d.department)?.name || d.department,
+          category: CATEGORIES.find((c) => c.id === d.category)?.name || d.category,
+          createdAt: d.createdAt,
+          uploadedBy: d.uploadedByName,
+        }))
+        const aiResponse = await chatWithAI(message, summaries)
+        if (aiResponse) {
+          const { data: { user } } = await supabase.auth.getUser()
+          await logAction(user ? { id: user.id } : null, 'SEARCH', `AI Chat: ${message}`)
+          return { response: aiResponse, aiPowered: true }
+        }
+      } catch (aiErr) {
+        console.warn('AI chat failed, falling back:', aiErr.message)
+      }
+    }
+
+    // Rule-based fallback (unchanged logic)
+    const q = message.toLowerCase()
     const { filters } = parseQuery(message, lookups)
     const hasFilters = Object.keys(filters).length > 0
     let response = ''
@@ -546,15 +628,12 @@ export const mockApi = {
       const deptCounts = DEPARTMENTS.map((d) => ({ name: d.name, count: docs.filter((doc) => doc.department === d.id).length })).sort((a, b) => b.count - a.count)
       response = `Documents by department:\n\n${deptCounts.map((d) => `• ${d.name}: ${d.count}`).join('\n')}`
     } else {
-      // Ranked relevance fallback (understands filters like "urgent
-      // certificates from Education Department") instead of one dumb
-      // substring check — this is the "smart" part of smart search.
       const matching = smartSearch(docs, message, lookups).slice(0, 5)
       response = matching.length
         ? `I found ${matching.length} documents matching your query:\n\n${matching.map((d) => `• ${d.title} - ${d.documentNumber}`).join('\n')}`
         : `I couldn't find any documents matching "${message}". Try asking about document counts, pending approvals, overdue items, recent uploads, or documents by department/category/priority.`
     }
-    return { response }
+    return { response, aiPowered: false }
   },
 
   async getConstants() {

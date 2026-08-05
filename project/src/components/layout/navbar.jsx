@@ -35,7 +35,9 @@ export function Navbar({ onMenuClick }) {
   const notifRef = useRef(null)
 
   useEffect(() => {
-    mockApi.getNotifications().then(setNotifications)
+    mockApi.getNotifications()
+      .then(setNotifications)
+      .catch(() => setNotifications([]))
   }, [])
 
   useEffect(() => {

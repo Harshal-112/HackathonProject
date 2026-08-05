@@ -14,7 +14,7 @@ export function Tabs({ defaultValue, children, className }) {
 
 export function TabsList({ children, className }) {
   return (
-    <div className={cn('inline-flex h-10 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground gap-1', className)}>
+    <div className={cn('inline-flex flex-wrap items-center justify-start rounded-lg bg-muted p-1 text-muted-foreground gap-1', className)}>
       {children}
     </div>
   )
@@ -38,5 +38,5 @@ export function TabsTrigger({ value, children }) {
 export function TabsContent({ value, children }) {
   const { value: current } = useContext(TabsContext)
   if (current !== value) return null
-  return <div className="mt-4 animate-fade-in">{children}</div>
+  return <div className="mt-4" style={{ animation: 'fadeIn 0.2s ease' }}>{children}</div>
 }

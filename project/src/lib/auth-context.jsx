@@ -21,8 +21,9 @@ function mapProfileToUser(profile) {
 }
 
 async function fetchProfile(userId) {
-  const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single()
-  if (error) throw error
+  if (!userId) return null
+  const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
+  if (error) throw new Error(error.message)
   return mapProfileToUser(data)
 }
 
@@ -84,6 +85,9 @@ export function AuthProvider({ children }) {
   }, [])
 
   const register = useCallback(async (formData) => {
+    let authUser = null
+    let authSession = null
+
     const { data, error } = await supabase.auth.signUp({
       email: formData.email,
       password: formData.password,
@@ -97,18 +101,79 @@ export function AuthProvider({ children }) {
         },
       },
     })
-    if (error) throw new Error(error.message)
 
-    // If email confirmation is enabled in your Supabase project, there is no
-    // session yet at this point — the user must confirm via email first.
-    if (!data.session) {
-      throw new Error('Account created. Check your email to confirm before logging in.')
+    if (error) {
+      const msg = error.message || ''
+      if (msg.toLowerCase().includes('already registered') || msg.toLowerCase().includes('already exists')) {
+        // If email exists in auth, try signing in with provided password
+        const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password,
+        })
+        if (!signInErr && signInData?.user) {
+          authUser = signInData.user
+          authSession = signInData.session
+        } else {
+          throw new Error('An account with this email address already exists. Please log in with your password.')
+        }
+      } else {
+        throw new Error(msg)
+      }
+    } else {
+      authUser = data?.user
+      authSession = data?.session
     }
-    const profile = await fetchProfile(data.user.id)
-    if (profile.status === 'pending') {
+
+    if (!authUser) {
+      throw new Error('Registration failed. Please check your details and try again.')
+    }
+
+    // Check if profile row exists in database
+    let profile = await fetchProfile(authUser.id)
+
+    // If profile row was deleted previously, automatically re-create it now
+    if (!profile) {
+      const newProfile = {
+        id: authUser.id,
+        name: formData.name,
+        email: formData.email,
+        role: formData.role || 'citizen',
+        department: formData.department || 'panchayat',
+        designation: formData.designation || '',
+        phone: formData.phone || '',
+        status: formData.role === 'verifier' ? 'pending' : 'active',
+        created_at: new Date().toISOString(),
+        last_login: new Date().toISOString(),
+      }
+
+      const { data: created, error: upsertErr } = await supabase
+        .from('profiles')
+        .upsert(newProfile)
+        .select()
+        .maybeSingle()
+
+      if (upsertErr) {
+        throw new Error(`Profile creation failed: ${upsertErr.message}`)
+      }
+      profile = mapProfileToUser(created)
+    }
+
+    if (!authSession && profile?.status === 'active') {
+      // Try signing in to obtain active session
+      try {
+        const { data: sData } = await supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password,
+        })
+        if (sData?.session) authSession = sData.session
+      } catch (_) {}
+    }
+
+    if (profile?.status === 'pending') {
       await supabase.auth.signOut()
       throw new Error('Account created. A verifier account needs admin approval before you can log in — check back once approved.')
     }
+
     setUser(profile)
     return profile
   }, [])

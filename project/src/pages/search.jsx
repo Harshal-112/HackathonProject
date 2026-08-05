@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Search, Sparkles, FileText, Brain, Send, MessageSquare, X,
-  TrendingUp, Clock, Filter,
+  TrendingUp, Clock, Filter, Wand2, Zap,
 } from 'lucide-react'
 import { mockApi } from '@/lib/mock-api'
 import { useAuth } from '@/lib/auth-context'
@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { StatusBadge, CategoryBadge } from '@/components/shared/badges'
 import { formatDate, timeAgo, cn } from '@/lib/utils'
+import { isAIAvailable } from '@/services/aiService'
 
 const suggestedQueries = [
   'Show all land documents uploaded in January',
@@ -68,7 +69,7 @@ export default function SearchPage() {
     setChatLoading(true)
     try {
       const res = await mockApi.chatWithDocuments(userMsg, user)
-      setChatMessages((prev) => [...prev, { role: 'assistant', text: res.response }])
+      setChatMessages((prev) => [...prev, { role: 'assistant', text: res.response, aiPowered: res.aiPowered }])
     } catch (err) {
       setChatMessages((prev) => [...prev, { role: 'assistant', text: 'Sorry, I encountered an error. Please try again.' }])
     } finally {
@@ -189,8 +190,13 @@ export default function SearchPage() {
         <div>
           <Card className="flex flex-col h-[600px]">
             <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
+            <CardTitle className="text-base flex items-center gap-2">
                 <Brain className="h-4 w-4 text-primary" /> AI Document Assistant
+                {isAIAvailable() && (
+                  <span className="text-xs text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-900/20 px-1.5 py-0.5 rounded-full flex items-center gap-1 ml-auto border border-violet-200 dark:border-violet-800">
+                    <Zap className="h-2.5 w-2.5" /> Gemini Powered
+                  </span>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col p-0">
@@ -217,6 +223,11 @@ export default function SearchPage() {
                         msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'
                       )}>
                         <pre className="whitespace-pre-wrap font-sans">{msg.text}</pre>
+                        {msg.aiPowered && (
+                          <p className="text-[10px] text-violet-500 mt-1 flex items-center gap-0.5">
+                            <Wand2 className="h-2.5 w-2.5" /> Gemini AI
+                          </p>
+                        )}
                       </div>
                     </motion.div>
                   ))}
