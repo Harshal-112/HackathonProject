@@ -18,6 +18,7 @@ import { Modal } from '@/components/ui/modal'
 import { StatusBadge, PriorityBadge } from '@/components/shared/badges'
 import { DEPARTMENTS } from '@/lib/mock-data'
 import { formatDateTime, timeAgo } from '@/lib/utils'
+import { isOverdue, sortApprovalsByUrgency } from '@/services/workflowAutomation'
 
 export default function ApprovalsPage() {
   const { user } = useAuth()
@@ -33,7 +34,7 @@ export default function ApprovalsPage() {
     setLoading(true)
     try {
       const res = await mockApi.getApprovals()
-      setDocs(res)
+      setDocs(sortApprovalsByUrgency(res))
     } catch (err) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' })
     } finally {
@@ -122,6 +123,9 @@ export default function ApprovalsPage() {
                             <StatusBadge status={doc.status} />
                             <PriorityBadge priority={doc.priority} />
                             <Badge variant="outline">{deptName(doc.department)}</Badge>
+                            {isOverdue(doc) && (
+                              <Badge variant="destructive">Overdue</Badge>
+                            )}
                           </div>
                           <div className="flex flex-wrap items-center gap-4 mt-2 text-xs text-muted-foreground">
                             <span className="flex items-center gap-1">

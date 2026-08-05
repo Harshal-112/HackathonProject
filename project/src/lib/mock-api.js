@@ -1,6 +1,8 @@
 import { supabase } from './supabase.js'
 import { DEPARTMENTS, CATEGORIES, PRIORITIES, DOC_STATUSES, ROLES } from './mock-data.js'
 import { uid, paginate, sortBy } from './utils.js'
+import { smartSearch, parseQuery } from '../services/smartSearch.js'
+import { autoRouteDocument, isOverdue } from '../services/workflowAutomation.js'
 
 // ---------------------------------------------------------------------------
 // This file used to be a fake API that read/wrote everything to
@@ -243,18 +245,35 @@ export const mockApi = {
   },
 
   async uploadDocument(file, metadata, user, ocrData = null) {
-    const dept = metadata.department || user.department
-    const deptObj = DEPARTMENTS.find((d) => d.id === dept)
-    const cat = CATEGORIES.find((c) => c.id === metadata.category) || CATEGORIES[Math.floor(Math.random() * CATEGORIES.length)]
-    const priority = PRIORITIES.find((p) => p.id === metadata.priority) || PRIORITIES[Math.floor(Math.random() * PRIORITIES.length)]
     console.log("OCR Data received:", ocrData);
+
+    // Workflow automation: when OCR ran, use the classifier output + OCR
+    // text to auto-pick category/department/priority instead of a random
+    // fallback. Manual selections in `metadata` always win over automation.
+    const auto = ocrData
+      ? autoRouteDocument({
+          classification: { type: ocrData.documentType, category: ocrData.category, confidence: ocrData?.metadata?.classificationConfidence },
+          ocrText: ocrData.ocrText,
+          importantDates: ocrData?.metadata?.importantDates || [],
+        })
+      : null
+    if (auto) console.log('Auto-routing decision:', auto)
+
+    const dept = metadata.department || auto?.department || user.department
+    const deptObj = DEPARTMENTS.find((d) => d.id === dept)
+    const cat = CATEGORIES.find((c) => c.id === metadata.category)
+      || CATEGORIES.find((c) => c.id === auto?.category)
+      || CATEGORIES[Math.floor(Math.random() * CATEGORIES.length)]
+    const priority = PRIORITIES.find((p) => p.id === metadata.priority)
+      || PRIORITIES.find((p) => p.id === auto?.priority)
+      || PRIORITIES[Math.floor(Math.random() * PRIORITIES.length)]
+
     const row = {
       title: ocrData?.metadata?.title || metadata.title || file.name.replace(/\.[^.]+$/, ''),
       file_name: file.name,
       file_type: file.name.split('.').pop().toLowerCase(),
       file_size: file.size,
-      category:
-        ocrData?.category?.toLowerCase() || cat.id,
+      category: cat.id,
       department:
         dept,
       priority: priority.id,
@@ -306,7 +325,10 @@ export const mockApi = {
             "",
 
         confidenceScore:
-            ocrData?.ocrConfidence ?? 0
+            ocrData?.ocrConfidence ?? 0,
+
+        routingReason:
+            auto?.reason || [],
 
       },
       versions: [{ version: 1, uploadedAt: new Date().toISOString(), uploadedBy: user.name, fileSize: file.size, note: 'Initial upload' }],
@@ -482,17 +504,11 @@ export const mockApi = {
   async searchDocuments(query) {
     const { data, error } = await supabase.from('documents').select('*')
     ok(error)
-    const q = query.toLowerCase()
-    const results = (data || []).map(toDoc).filter((d) =>
-      d.title.toLowerCase().includes(q) ||
-      d.documentNumber?.toLowerCase().includes(q) ||
-      (d.ocrText || '').toLowerCase().includes(q) ||
-      (d.metadata?.summary || '').toLowerCase().includes(q) ||
-      (d.metadata?.tags || []).some((t) => t.toLowerCase().includes(q)) ||
-      (d.metadata?.keywords || []).some((k) => k.toLowerCase().includes(q)) ||
-      (d.metadata?.personNames || []).some((n) => n.toLowerCase().includes(q)) ||
-      d.uploadedByName?.toLowerCase().includes(q),
-    )
+    const docs = (data || []).map(toDoc)
+    // Smart search: understands filters like "urgent land documents from
+    // Revenue Department this month" instead of one dumb substring match,
+    // and ranks results by relevance. 100% client-side, no external API.
+    const results = smartSearch(docs, query, { DEPARTMENTS, CATEGORIES, PRIORITIES, DOC_STATUSES })
     const { data: { user } } = await supabase.auth.getUser()
     await logAction(user ? { id: user.id } : null, 'SEARCH', `Searched for: ${query}`)
     return results
@@ -502,26 +518,41 @@ export const mockApi = {
     const { data } = await supabase.from('documents').select('*')
     const docs = (data || []).map(toDoc)
     const q = message.toLowerCase()
+    const lookups = { DEPARTMENTS, CATEGORIES, PRIORITIES, DOC_STATUSES }
+    const { filters } = parseQuery(message, lookups)
+    const hasFilters = Object.keys(filters).length > 0
     let response = ''
+
     if (q.includes('how many') || q.includes('total') || q.includes('count')) {
-      response = `There are currently ${docs.length} documents in the system. ${docs.filter((d) => d.status === 'pending').length} are pending approval, ${docs.filter((d) => d.status === 'approved').length} have been approved, and ${docs.filter((d) => d.status === 'rejected').length} have been rejected.`
+      const scoped = hasFilters ? smartSearch(docs, message, lookups) : docs
+      response = `There are currently ${scoped.length} document(s)${hasFilters ? ' matching that filter' : ' in the system'}. ${scoped.filter((d) => d.status === 'pending').length} are pending approval, ${scoped.filter((d) => d.status === 'approved').length} have been approved, and ${scoped.filter((d) => d.status === 'rejected').length} have been rejected.`
+    } else if (q.includes('overdue') || q.includes('escalat') || q.includes('late')) {
+      const overdue = docs.filter((d) => isOverdue(d))
+      response = overdue.length
+        ? `There are ${overdue.length} overdue document(s) awaiting approval:\n\n${overdue.slice(0, 5).map((d) => `• ${d.title} (${d.priority} priority, waiting since ${new Date(d.createdAt).toLocaleDateString('en-IN')})`).join('\n')}`
+        : `Nothing is overdue right now — every pending document is still within its review window.`
     } else if (q.includes('pending') || q.includes('approval')) {
-      const pending = docs.filter((d) => d.status === 'pending').slice(0, 5)
-      response = `There are ${docs.filter((d) => d.status === 'pending').length} documents pending approval. Here are the most recent ones:\n\n${pending.map((d) => `• ${d.title} (uploaded by ${d.uploadedByName})`).join('\n')}`
+      const pendingDocs = docs.filter((d) => d.status === 'pending')
+      const pending = (hasFilters ? smartSearch(pendingDocs, message, lookups) : pendingDocs).slice(0, 5)
+      response = `There are ${pendingDocs.length} documents pending approval${hasFilters ? ' matching that filter' : ''}. Here are the most relevant:\n\n${pending.map((d) => `• ${d.title} (uploaded by ${d.uploadedByName})`).join('\n')}`
     } else if (q.includes('land') || q.includes('property')) {
       const land = docs.filter((d) => d.title.toLowerCase().includes('land') || d.title.toLowerCase().includes('property') || d.category === 'land').slice(0, 5)
       response = `I found ${land.length} land/property related documents:\n\n${land.map((d) => `• ${d.title} - ${d.documentNumber}`).join('\n')}`
     } else if (q.includes('upload') || q.includes('recent')) {
-      const recent = [...docs].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5)
-      response = `Here are the 5 most recently uploaded documents:\n\n${recent.map((d) => `• ${d.title} (uploaded ${new Date(d.createdAt).toLocaleDateString('en-IN')})`).join('\n')}`
+      const recentPool = hasFilters ? smartSearch(docs, message, lookups) : docs
+      const recent = [...recentPool].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5)
+      response = `Here are the most recently uploaded documents${hasFilters ? ' matching that filter' : ''}:\n\n${recent.map((d) => `• ${d.title} (uploaded ${new Date(d.createdAt).toLocaleDateString('en-IN')})`).join('\n')}`
     } else if (q.includes('department')) {
       const deptCounts = DEPARTMENTS.map((d) => ({ name: d.name, count: docs.filter((doc) => doc.department === d.id).length })).sort((a, b) => b.count - a.count)
       response = `Documents by department:\n\n${deptCounts.map((d) => `• ${d.name}: ${d.count}`).join('\n')}`
     } else {
-      const matching = docs.filter((d) => d.title.toLowerCase().includes(q) || (d.ocrText || '').toLowerCase().includes(q)).slice(0, 5)
+      // Ranked relevance fallback (understands filters like "urgent
+      // certificates from Education Department") instead of one dumb
+      // substring check — this is the "smart" part of smart search.
+      const matching = smartSearch(docs, message, lookups).slice(0, 5)
       response = matching.length
         ? `I found ${matching.length} documents matching your query:\n\n${matching.map((d) => `• ${d.title} - ${d.documentNumber}`).join('\n')}`
-        : `I couldn't find any documents matching "${message}". Try asking about document counts, pending approvals, recent uploads, or documents by department.`
+        : `I couldn't find any documents matching "${message}". Try asking about document counts, pending approvals, overdue items, recent uploads, or documents by department/category/priority.`
     }
     return { response }
   },
