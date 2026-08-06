@@ -104,8 +104,9 @@ export function AuthProvider({ children }) {
 
     if (error) {
       const msg = error.message || ''
+      // Handle explicit "already registered" errors
       if (msg.toLowerCase().includes('already registered') || msg.toLowerCase().includes('already exists')) {
-        // If email exists in auth, try signing in with provided password
+        // Try signing in — the user's auth record exists, maybe just the profile was deleted
         const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
           email: formData.email,
           password: formData.password,
@@ -114,7 +115,7 @@ export function AuthProvider({ children }) {
           authUser = signInData.user
           authSession = signInData.session
         } else {
-          throw new Error('An account with this email address already exists. Please log in with your password.')
+          throw new Error('An account with this email already exists. Please use the Login page.')
         }
       } else {
         throw new Error(msg)
@@ -122,6 +123,23 @@ export function AuthProvider({ children }) {
     } else {
       authUser = data?.user
       authSession = data?.session
+
+      // CRITICAL: Supabase returns a FAKE SUCCESS for existing confirmed emails
+      // to prevent user enumeration. Detect this via empty identities array.
+      if (authUser && Array.isArray(authUser.identities) && authUser.identities.length === 0) {
+        // Email already exists — try signing in with the provided password
+        const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password,
+        })
+        if (!signInErr && signInData?.user) {
+          authUser = signInData.user
+          authSession = signInData.session
+        } else {
+          // Password doesn't match — email is taken by someone else
+          throw new Error('An account with this email already exists. Please use the Login page or Forgot Password.')
+        }
+      }
     }
 
     if (!authUser) {
@@ -159,7 +177,7 @@ export function AuthProvider({ children }) {
     }
 
     if (!authSession && profile?.status === 'active') {
-      // Try signing in to obtain active session
+      // Try signing in to obtain active session (email confirmation disabled case)
       try {
         const { data: sData } = await supabase.auth.signInWithPassword({
           email: formData.email,

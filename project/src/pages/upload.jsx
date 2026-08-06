@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   UploadCloud, FileText, Image, FileCheck, X, ScanText, Brain,
   CheckCircle2, AlertCircle, Sparkles, ArrowRight, Wand2, Eye,
-  ChevronDown, ChevronUp, Zap, RefreshCw, Check,
+  ChevronDown, ChevronUp, Zap, RefreshCw, Check, ShieldCheck, ShieldOff,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useToast } from '@/lib/toast-context'
@@ -19,16 +19,17 @@ import { formatBytes, cn } from '@/lib/utils'
 import { useOCR } from '@/hooks/useOCR'
 import { isAIAvailable } from '@/services/aiService'
 import { autoRouteDocument } from '@/services/workflowAutomation'
+import { usePrivacy } from '@/lib/privacy-context'
 
 const ACCEPTED_TYPES = ['.pdf', '.jpg', '.jpeg', '.png', '.docx']
 const MAX_SIZE = 10 * 1024 * 1024
 
-const getStages = () => [
+const getStages = (isConfidential) => [
   { id: 'uploading', label: 'Preparing file', icon: UploadCloud },
   { id: 'ocr', label: 'Running OCR extraction', icon: ScanText },
   { id: 'metadata', label: 'Extracting metadata', icon: FileCheck },
-  ...(isAIAvailable()
-    ? [{ id: 'ai', label: 'AI document analysis (Gemini)', icon: Wand2 }]
+  ...(!isConfidential && isAIAvailable()
+    ? [{ id: 'ai', label: 'AI document analysis (Local + Enhanced)', icon: Wand2 }]
     : []),
   { id: 'done', label: 'Complete', icon: CheckCircle2 },
 ]
@@ -44,6 +45,7 @@ export default function UploadPage() {
   const { processDocument } = useOCR()
   const { toast } = useToast()
   const navigate = useNavigate()
+  const { confidentialMode } = usePrivacy()
   const [files, setFiles] = useState([])
   const [dragging, setDragging] = useState(false)
   const [processing, setProcessing] = useState(false)
@@ -60,7 +62,7 @@ export default function UploadPage() {
     priority: 'medium',
   })
   const inputRef = useRef(null)
-  const stages = getStages()
+  const stages = getStages(confidentialMode)
   const stageIndex = STAGE_ID_TO_INDEX(stages)
 
   const currentStageNum = currentStageId ? (stageIndex[currentStageId] ?? -1) : -1
@@ -247,10 +249,15 @@ export default function UploadPage() {
         title="Upload Documents"
         description="Upload PDF, JPG, PNG, or DOCX files. Document details are auto-detected by OCR & AI."
       >
-        {isAIAvailable() && (
+        {confidentialMode ? (
           <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
+            <ShieldCheck className="h-3 w-3" />
+            Strict Confidentiality Mode
+          </div>
+        ) : isAIAvailable() && (
+          <div className="flex items-center gap-1.5 text-xs text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-900/20 px-2.5 py-1 rounded-full border border-violet-200 dark:border-violet-800">
             <Zap className="h-3 w-3" />
-            Gemini AI Active
+            AI Enhanced
           </div>
         )}
       </PageHeader>

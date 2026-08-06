@@ -109,16 +109,18 @@ async function logAction(user, action, description, doc = null) {
   if (error) {
     if (docId) {
       // Retry inserting log entry without the document_id foreign key constraint
-      await supabase.from('audit_logs').insert({
-        user_id: user?.id || null,
-        user_name: user?.name || 'System',
-        user_role: user?.role || 'system',
-        action,
-        description,
-        document_id: null,
-        document_title: doc?.title || null,
-        user_agent: navigator.userAgent,
-      }).catch(() => {})
+      try {
+        await supabase.from('audit_logs').insert({
+          user_id: user?.id || null,
+          user_name: user?.name || 'System',
+          user_role: user?.role || 'system',
+          action,
+          description,
+          document_id: null,
+          document_title: doc?.title || null,
+          user_agent: navigator.userAgent,
+        })
+      } catch (_) {}
     } else {
       console.warn('audit log failed:', error.message)
     }
@@ -373,7 +375,7 @@ export const mockApi = {
     const doc = toDoc(existing)
     const approvals = [...(doc.approvals || []), { id: uid('appr'), action: 'approved', userId: user.id, userName: user.name, comment: comment || 'Approved', timestamp: new Date().toISOString() }]
     const { data, error } = await supabase.from('documents').update({ status: 'approved', approvals }).eq('id', id).select().single()
-    ok(error) // fails here with a permissions error if a non-staff role somehow calls this directly
+    ok(error)
     await logAction(user, 'APPROVE', 'Approved document', doc)
     await addNotification(doc.uploadedBy, 'approval', 'Document Approved', `Document "${doc.title}" has been approved`)
     return toDoc(data)
@@ -397,6 +399,7 @@ export const mockApi = {
     const { data, error } = await supabase.from('documents').update({ status: 'changes', approvals }).eq('id', id).select().single()
     ok(error)
     await logAction(user, 'METADATA_CHANGE', 'Requested changes on document', doc)
+    await addNotification(doc.uploadedBy, 'changes', 'Changes Requested', `Document "${doc.title}" requires changes before approval. Please review and resubmit.`)
     return toDoc(data)
   },
 
@@ -438,6 +441,19 @@ export const mockApi = {
     ok(error)
     const { data } = await supabase.from('notifications').select('*').order('created_at', { ascending: false })
     return (data || []).map(toNotif)
+  },
+
+  async deleteNotification(id) {
+    const { error } = await supabase.from('notifications').delete().eq('id', id)
+    ok(error)
+    return { success: true }
+  },
+
+  async deleteAllNotifications() {
+    const { data: { user } } = await supabase.auth.getUser()
+    const { error } = await supabase.from('notifications').delete().eq('user_id', user.id)
+    ok(error)
+    return { success: true }
   },
 
   // --- Users (admin-only writes — enforced by RLS + a DB trigger that

@@ -2,16 +2,20 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from '@/lib/auth-context'
 import { ThemeProvider } from '@/lib/theme-context'
 import { ToastProvider } from '@/lib/toast-context'
+import { PrivacyProvider } from '@/lib/privacy-context'
 import { ProtectedRoute } from '@/components/layout/protected-route'
 import { Layout } from '@/components/layout/layout'
 import LoginPage from '@/pages/login'
 import RegisterPage from '@/pages/register'
 import ForgotPasswordPage from '@/pages/forgot-password'
+import ResetPasswordPage from '@/pages/reset-password'
 import DashboardPage from '@/pages/dashboard'
 import UploadPage from '@/pages/upload'
 import DocumentListPage from '@/pages/document-list'
 import DocumentDetailsPage from '@/pages/document-details'
+import VerifyPage from '@/pages/verify'
 import SearchPage from '@/pages/search'
+import NotificationsPage from '@/pages/notifications'
 import ApprovalsPage from '@/pages/approvals'
 import AuditTrailPage from '@/pages/audit-trail'
 import ReportsPage from '@/pages/reports'
@@ -24,11 +28,14 @@ export default function App() {
   return (
     <ThemeProvider>
       <ToastProvider>
+        <PrivacyProvider>
         <AuthProvider>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/verify/:id" element={<VerifyPage />} />
 
             <Route
               element={
@@ -42,6 +49,7 @@ export default function App() {
               <Route path="/documents" element={<DocumentListPage />} />
               <Route path="/documents/:id" element={<DocumentDetailsPage />} />
               <Route path="/search" element={<SearchPage />} />
+              <Route path="/notifications" element={<NotificationsPage />} />
               <Route path="/approvals" element={<ProtectedRoute roles={['admin', 'officer', 'verifier']}><ApprovalsPage /></ProtectedRoute>} />
               <Route path="/audit" element={<ProtectedRoute roles={['admin', 'officer', 'verifier']}><AuditTrailPage /></ProtectedRoute>} />
               <Route path="/reports" element={<ProtectedRoute roles={['admin', 'officer', 'verifier']}><ReportsPage /></ProtectedRoute>} />
@@ -54,6 +62,7 @@ export default function App() {
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </AuthProvider>
+        </PrivacyProvider>
       </ToastProvider>
     </ThemeProvider>
   )

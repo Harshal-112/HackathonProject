@@ -86,7 +86,7 @@ export function AIInsightsPanel({ doc }) {
               <Wand2 className="h-4 w-4 text-violet-600 dark:text-violet-400" />
               AI-Powered Insights
               <span className="text-xs text-violet-600 dark:text-violet-400 bg-violet-100 dark:bg-violet-900/30 px-1.5 py-0.5 rounded-full flex items-center gap-1 ml-auto">
-                <Zap className="h-2.5 w-2.5" /> Gemini Enhanced
+                <Zap className="h-2.5 w-2.5" /> AI Enhanced
               </span>
             </>
           ) : (

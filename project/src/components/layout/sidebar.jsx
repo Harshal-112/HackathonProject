@@ -14,15 +14,19 @@ import {
   Landmark,
   X,
   ShieldCheck,
+  Bell,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/lib/auth-context'
+import { useEffect, useState } from 'react'
+import { mockApi } from '@/lib/mock-api'
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/upload', label: 'Upload', icon: Upload },
   { to: '/documents', label: 'Documents', icon: FileText },
   { to: '/search', label: 'Smart Search', icon: Search },
+  { to: '/notifications', label: 'Notifications', icon: Bell },
   { to: '/approvals', label: 'Approvals', icon: CheckCircle, roles: ['admin', 'officer', 'verifier'] },
   { to: '/audit', label: 'Audit Trail', icon: ScrollText, roles: ['admin', 'officer', 'verifier'] },
   { to: '/reports', label: 'Reports', icon: BarChart3, roles: ['admin', 'officer', 'verifier'] },
@@ -31,7 +35,7 @@ const navItems = [
   { to: '/profile', label: 'Profile', icon: User },
 ]
 
-export function Sidebar({ open, onClose }) {
+export function Sidebar({ open, onClose, unreadCount = 0 }) {
   const { user } = useAuth()
   const location = useLocation()
 
@@ -94,6 +98,11 @@ export function Sidebar({ open, onClose }) {
                 >
                   <Icon className="h-4.5 w-4.5 shrink-0" style={{ width: 18, height: 18 }} />
                   {item.label}
+                  {item.to === '/notifications' && unreadCount > 0 && (
+                    <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground px-1">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
                 </NavLink>
               )
             })}

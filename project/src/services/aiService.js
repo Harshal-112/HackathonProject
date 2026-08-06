@@ -1,13 +1,14 @@
 // ---------------------------------------------------------------------------
 // aiService.js
 //
-// Free AI-powered document analysis using Google Gemini 1.5 Flash.
+// Free AI-powered document analysis.
 // Falls back gracefully to rule-based extraction when:
 //   - No API key is configured (VITE_GEMINI_API_KEY not set)
+//   - Strict Confidentiality Mode is active (user toggled it ON)
 //   - Quota is exceeded (429)
 //   - Network error / any other failure
 //
-// Gemini 1.5 Flash free tier:
+// Free AI tier:
 //   - 15 requests per minute
 //   - 1,500 requests per day
 //   - No credit card required
@@ -20,7 +21,7 @@ const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || ''
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta'
 
 // Try these model names in order — placing active working models first
-const GEMINI_MODELS = [
+const AI_MODELS = [
   'gemini-flash-latest',
   'gemini-2.5-flash-lite',
   'gemini-flash-lite-latest',
@@ -39,15 +40,55 @@ export function isAIAvailable() {
 }
 
 // ---------------------------------------------------------------------------
+// Check if Strict Confidentiality Mode is active (reads localStorage directly
+// so it works outside React without needing the context).
+// ---------------------------------------------------------------------------
+export function isConfidentialMode() {
+  try {
+    return localStorage.getItem('sdds_confidential_mode') === 'true'
+  } catch {
+    return false
+  }
+}
+
+// ---------------------------------------------------------------------------
+// PII Masker — replaces citizen-specific sensitive data before sending
+// any text to external AI. Document structure / headings are preserved.
+// ---------------------------------------------------------------------------
+export function maskPII(text) {
+  if (!text) return text
+  return text
+    // Aadhaar: 12 digit groups (xxxx xxxx xxxx or xxxx-xxxx-xxxx)
+    .replace(/\b(\d{4})[\s-](\d{4})[\s-](\d{4})\b/g, '[AADHAAR_REDACTED]')
+    // PAN card: AAAAA9999A
+    .replace(/\b[A-Z]{5}[0-9]{4}[A-Z]\b/g, '[PAN_REDACTED]')
+    // GST: 15-char GST format
+    .replace(/\b\d{2}[A-Z]{5}\d{4}[A-Z]{1}[A-Z\d]{1}[Z]{1}[A-Z\d]{1}\b/g, '[GST_REDACTED]')
+    // Phone numbers (Indian formats)
+    .replace(/\b(?:\+91[\s-]?)?[6-9]\d{9}\b/g, '[PHONE_REDACTED]')
+    // Email addresses
+    .replace(/[\w._%+-]+@[\w.-]+\.[a-z]{2,}/gi, '[EMAIL_REDACTED]')
+    // Voter ID: 3 letters + 7 digits
+    .replace(/\b[A-Z]{3}[0-9]{7}\b/g, '[VOTERID_REDACTED]')
+    // Passport: 1 letter + 7 digits
+    .replace(/\b[A-Z][0-9]{7}\b/g, '[PASSPORT_REDACTED]')
+}
+
+// ---------------------------------------------------------------------------
 // Core fetch wrapper — tries each model name in order, stops on first success
 // ---------------------------------------------------------------------------
 async function callGemini(parts, systemInstruction = '') {
   if (!isAIAvailable()) {
-    throw new Error('Gemini API key not configured')
+    throw new Error('AI key not configured')
   }
 
+  // Mask PII in all text parts before sending
+  const safeParts = parts.map((p) =>
+    p.text ? { ...p, text: maskPII(p.text) } : p
+  )
+
   const body = {
-    contents: [{ role: 'user', parts }],
+    contents: [{ role: 'user', parts: safeParts }],
     generationConfig: {
       temperature: 0.1,
       topP: 0.9,
@@ -60,7 +101,7 @@ async function callGemini(parts, systemInstruction = '') {
   }
 
   let lastError = null
-  for (const model of GEMINI_MODELS) {
+  for (const model of AI_MODELS) {
     const url = `${GEMINI_BASE}/models/${model}:generateContent?key=${GEMINI_API_KEY}`
     try {
       const res = await fetch(url, {
@@ -72,7 +113,7 @@ async function callGemini(parts, systemInstruction = '') {
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
         const msg = err?.error?.message || res.statusText
-        lastError = new Error(`Gemini error ${res.status}: ${msg}`)
+        lastError = new Error(`AI service error ${res.status}: ${msg}`)
         console.warn(`[AI] Model ${model} returned ${res.status} (${msg}), trying next model...`)
         continue
       }
@@ -90,7 +131,7 @@ async function callGemini(parts, systemInstruction = '') {
     }
   }
 
-  throw lastError || new Error('No working Gemini model available')
+  throw lastError || new Error('No working AI model available')
 }
 
 
@@ -177,7 +218,7 @@ OCR TEXT:
 ${ocrText.slice(0, 4000)}`
 
 export async function enhanceMetadataWithAI(ocrText, ruleBasedMeta = {}) {
-  if (!isAIAvailable() || !ocrText?.trim()) {
+  if (!isAIAvailable() || !ocrText?.trim() || isConfidentialMode()) {
     return { aiEnhanced: false, ...ruleBasedMeta }
   }
 
@@ -235,7 +276,7 @@ function mergeArrays(ai, rule) {
 // AI-Powered Document Summary
 // ---------------------------------------------------------------------------
 export async function generateAISummary(ocrText, classification) {
-  if (!isAIAvailable() || !ocrText?.trim()) {
+  if (!isAIAvailable() || !ocrText?.trim() || isConfidentialMode()) {
     return null
   }
 
@@ -267,7 +308,7 @@ Be concise, factual, and helpful. Format your responses clearly.
 If asked about specific documents, reference their title and document number.`
 
 export async function chatWithAI(message, documentSummaries = []) {
-  if (!isAIAvailable()) {
+  if (!isAIAvailable() || isConfidentialMode()) {
     return null // caller falls back to rule-based chat
   }
 
@@ -296,7 +337,7 @@ Answer helpfully and concisely based on the document data above.`
 // AI Document Classification (when rule-based gives low confidence)
 // ---------------------------------------------------------------------------
 export async function classifyWithAI(ocrText) {
-  if (!isAIAvailable() || !ocrText?.trim()) {
+  if (!isAIAvailable() || !ocrText?.trim() || isConfidentialMode()) {
     return null
   }
 

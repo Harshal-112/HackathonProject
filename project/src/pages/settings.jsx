@@ -179,7 +179,7 @@ export default function SettingsPage() {
                   <Select
                     value={settings.ai.provider}
                     onChange={(v) => setSettings({ ...settings, ai: { ...settings.ai, provider: v } })}
-                    options={[{ value: 'openai', label: 'OpenAI' }, { value: 'gemini', label: 'Google Gemini' }]}
+                    options={[{ value: 'openai', label: 'OpenAI' }, { value: 'gemini', label: 'Google AI' }]}
                     className="mt-1.5"
                   />
                 </div>

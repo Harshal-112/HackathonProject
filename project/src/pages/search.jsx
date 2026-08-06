@@ -194,7 +194,7 @@ export default function SearchPage() {
                 <Brain className="h-4 w-4 text-primary" /> AI Document Assistant
                 {isAIAvailable() && (
                   <span className="text-xs text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-900/20 px-1.5 py-0.5 rounded-full flex items-center gap-1 ml-auto border border-violet-200 dark:border-violet-800">
-                    <Zap className="h-2.5 w-2.5" /> Gemini Powered
+                    <Zap className="h-2.5 w-2.5" /> AI Powered
                   </span>
                 )}
               </CardTitle>
@@ -225,8 +225,8 @@ export default function SearchPage() {
                         <pre className="whitespace-pre-wrap font-sans">{msg.text}</pre>
                         {msg.aiPowered && (
                           <p className="text-[10px] text-violet-500 mt-1 flex items-center gap-0.5">
-                            <Wand2 className="h-2.5 w-2.5" /> Gemini AI
-                          </p>
+                          <Wand2 className="h-2.5 w-2.5" /> AI Enhanced
+                        </p>
                         )}
                       </div>
                     </motion.div>

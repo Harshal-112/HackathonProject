@@ -4,8 +4,9 @@ import { motion } from 'framer-motion'
 import {
   ArrowLeft, FileText, Download, Edit, Trash2, Clock, User, Building2,
   Calendar, Languages, ScanText, Brain, Tag, MapPin, FolderTree,
-  Percent, FileSignature, History, Save, X, MessageSquare, Mail, Phone, Hash,
+  Percent, FileSignature, History, Save, X, MessageSquare, Mail, Phone, Hash, QrCode, ShieldCheck,
 } from 'lucide-react'
+import { QRCodeSVG } from 'qrcode.react'
 import { mockApi } from '@/lib/mock-api'
 import { useAuth } from '@/lib/auth-context'
 import { useToast } from '@/lib/toast-context'
@@ -91,6 +92,16 @@ export default function DocumentDetailsPage() {
               <Button variant="outline" size="sm">
                 <Download className="h-3.5 w-3.5" /> Download
               </Button>
+              {doc.status === 'approved' && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 text-emerald-600 border-emerald-300 hover:bg-emerald-50"
+                  onClick={() => window.open(`/verify/${doc.id}`, '_blank')}
+                >
+                  <ShieldCheck className="h-3.5 w-3.5" /> Verify QR
+                </Button>
+              )}
               <Button variant="destructive" size="sm" onClick={() => setDeleteOpen(true)}>
                 <Trash2 className="h-3.5 w-3.5" /> Delete
               </Button>
