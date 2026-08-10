@@ -252,7 +252,7 @@ export default function UploadPage() {
         {confidentialMode ? (
           <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
             <ShieldCheck className="h-3 w-3" />
-            Strict Confidentiality Mode
+            End-to-End Encrypted Mode
           </div>
         ) : isAIAvailable() && (
           <div className="flex items-center gap-1.5 text-xs text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-900/20 px-2.5 py-1 rounded-full border border-violet-200 dark:border-violet-800">

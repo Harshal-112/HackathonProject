@@ -359,3 +359,52 @@ ${ocrText.slice(0, 1000)}`
     return null
   }
 }
+
+// ---------------------------------------------------------------------------
+// AI-Powered Smart Search (Semantic Document Matching & Ranking)
+// ---------------------------------------------------------------------------
+export async function aiSearchDocuments(query, docs = []) {
+  if (!isAIAvailable() || !query?.trim() || isConfidentialMode() || docs.length === 0) {
+    return null
+  }
+
+  try {
+    const compactDocs = docs.map((d) => ({
+      id: d.id,
+      title: d.title,
+      docNo: d.documentNumber,
+      status: d.status,
+      priority: d.priority,
+      dept: d.department,
+      cat: d.category,
+      summary: d.metadata?.summary || '',
+      tags: (d.metadata?.tags || []).join(', '),
+      ocrSnippet: (d.ocrText || '').slice(0, 300),
+    }))
+
+    const prompt = `You are a smart search engine for a government document repository.
+Search Query: "${query}"
+
+DOCUMENTS LIST:
+${JSON.stringify(compactDocs, null, 2)}
+
+Task:
+Analyze the search query and match it against document titles, document numbers, departments, categories, priorities, statuses, AI summaries, tags, and OCR text snippets.
+Understand natural language concepts (e.g. "urgent land files", "recruitment notices", "pending approvals in Revenue", "documents from last week").
+
+Return ONLY valid JSON in this exact format with NO markdown wrapper:
+{
+  "matchingIds": ["id1", "id2"]
+}
+
+If no documents match, return {"matchingIds": []}. Order the IDs from highest relevance to lowest.`
+
+    const raw = await callGemini([{ text: prompt }])
+    const parsed = parseJsonResponse(raw)
+    return Array.isArray(parsed?.matchingIds) ? parsed.matchingIds : null
+  } catch (err) {
+    console.warn('[AI Search] Gemini search parsing failed, falling back to smartSearch:', err.message)
+    return null
+  }
+}
+

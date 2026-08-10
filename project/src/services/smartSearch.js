@@ -229,13 +229,40 @@ export function scoreDocument(doc, parsed) {
   return score
 }
 
+function extractSnippet(doc, keywords) {
+  if (!doc) return ''
+  const summary = doc.metadata?.summary
+  if (summary && summary.trim()) return summary
+
+  const ocr = doc.ocrText || ''
+  if (!ocr || !keywords) return ocr.slice(0, 150) + (ocr.length > 150 ? '...' : '')
+
+  const words = keywords.split(' ').filter((w) => w.length >= 2)
+  for (const w of words) {
+    const idx = ocr.toLowerCase().indexOf(w.toLowerCase())
+    if (idx !== -1) {
+      const start = Math.max(0, idx - 40)
+      const end = Math.min(ocr.length, idx + 110)
+      let snippet = ocr.slice(start, end).replace(/\s+/g, ' ')
+      if (start > 0) snippet = '...' + snippet
+      if (end < ocr.length) snippet += '...'
+      return snippet
+    }
+  }
+
+  return ocr.slice(0, 150) + (ocr.length > 150 ? '...' : '')
+}
+
 /**
  * Main entry point. Returns docs sorted by relevance (most relevant first).
  */
 export function smartSearch(docs, query, lookups) {
   const parsed = parseQuery(query, lookups)
   return docs
-    .map((doc) => ({ doc, score: scoreDocument(doc, parsed) }))
+    .map((doc) => {
+      const score = scoreDocument(doc, parsed)
+      return { doc: { ...doc, snippet: extractSnippet(doc, parsed.keywords) }, score }
+    })
     .filter(({ score }) => score >= 0)
     .sort((a, b) => b.score - a.score || new Date(b.doc.createdAt) - new Date(a.doc.createdAt))
     .map(({ doc }) => doc)

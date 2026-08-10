@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Outlet } from 'react-router-dom'
 import { Sidebar } from './sidebar'
 import { Navbar } from './navbar'
+import FloatingChatbot from './floating-chatbot'
 import { mockApi } from '@/lib/mock-api'
 
 export function Layout() {
@@ -37,6 +38,7 @@ export function Layout() {
           <Outlet />
         </main>
       </div>
+      <FloatingChatbot />
     </div>
   )
 }

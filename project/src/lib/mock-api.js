@@ -3,7 +3,7 @@ import { DEPARTMENTS, CATEGORIES, PRIORITIES, DOC_STATUSES, ROLES } from './mock
 import { uid, paginate, sortBy } from './utils.js'
 import { smartSearch, parseQuery } from '../services/smartSearch.js'
 import { autoRouteDocument, isOverdue } from '../services/workflowAutomation.js'
-import { chatWithAI, isAIAvailable } from '../services/aiService.js'
+import { chatWithAI, aiSearchDocuments, isAIAvailable } from '../services/aiService.js'
 
 // ---------------------------------------------------------------------------
 // This file used to be a fake API that read/wrote everything to
@@ -325,15 +325,15 @@ export const mockApi = {
             ocrData?.metadata?.documentNumber || "",
 
         summary:
-            "",
+            ocrData?.metadata?.summary || "",
 
-        tags: [],
+        tags: ocrData?.metadata?.tags || [],
 
-        keywords: [],
+        keywords: ocrData?.metadata?.tags || [],
 
-        personNames: [],
+        personNames: ocrData?.metadata?.personNames || [],
 
-        addresses: [],
+        addresses: ocrData?.metadata?.addresses || [],
 
         importantDates:
             ocrData?.metadata?.importantDates || [],
@@ -361,6 +361,18 @@ export const mockApi = {
     await logAction(user, 'UPLOAD', 'Uploaded document', doc)
     await addNotification(user.id, 'upload', 'Upload Successful', `Document "${doc.title}" uploaded and OCR completed`)
     return doc
+  },
+
+  // --- Public Document Verification (safe public columns only) -----------
+  async getPublicDocumentVerification(id) {
+    const { data, error } = await supabase
+      .from('documents')
+      .select('id, title, status, document_number, department, category, priority, created_at, updated_at, page_count, language, uploaded_by_name, approvals')
+      .eq('id', id)
+      .maybeSingle()
+    if (error) throw new Error(error.message)
+    if (!data) throw new Error('Document not found.')
+    return toDoc(data)
   },
 
   // --- Approvals ------------------------------------------------------
@@ -572,14 +584,33 @@ export const mockApi = {
     return merged
   },
 
-  // --- Search / chat (client-side over whatever rows RLS returns you) --
   async searchDocuments(query) {
     const { data, error } = await supabase.from('documents').select('*')
     ok(error)
     const docs = (data || []).map(toDoc)
-    // Smart search: understands filters like "urgent land documents from
-    // Revenue Department this month" instead of one dumb substring match,
-    // and ranks results by relevance. 100% client-side, no external API.
+
+    // 1. Try Gemini AI semantic search first
+    if (isAIAvailable()) {
+      try {
+        const matchingIds = await aiSearchDocuments(query, docs)
+        if (matchingIds && matchingIds.length > 0) {
+          const matchedMap = new Map(docs.map((d) => [d.id, d]))
+          const aiResults = matchingIds
+            .map((id) => matchedMap.get(id))
+            .filter(Boolean)
+          
+          if (aiResults.length > 0) {
+            const { data: { user } } = await supabase.auth.getUser()
+            await logAction(user ? { id: user.id } : null, 'SEARCH', `AI Search for: ${query}`)
+            return aiResults
+          }
+        }
+      } catch (aiErr) {
+        console.warn('AI search failed, falling back to smartSearch:', aiErr.message)
+      }
+    }
+
+    // 2. Rule-based Smart Search fallback
     const results = smartSearch(docs, query, { DEPARTMENTS, CATEGORIES, PRIORITIES, DOC_STATUSES })
     const { data: { user } } = await supabase.auth.getUser()
     await logAction(user ? { id: user.id } : null, 'SEARCH', `Searched for: ${query}`)

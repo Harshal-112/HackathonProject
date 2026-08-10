@@ -6,28 +6,9 @@ import {
   Landmark, ShieldCheck, CheckCircle2, XCircle, Clock, FileText,
   Building2, Calendar, Hash, Download, ExternalLink,
 } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import { mockApi } from '@/lib/mock-api'
 import { DEPARTMENTS, CATEGORIES } from '@/lib/mock-data'
 import { Button } from '@/components/ui/button'
-
-function toDoc(row) {
-  if (!row) return null
-  return {
-    id: row.id,
-    title: row.title,
-    status: row.status,
-    category: row.category,
-    department: row.department,
-    priority: row.priority,
-    documentNumber: row.document_number,
-    uploadedByName: row.uploaded_by_name,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-    pageCount: row.page_count,
-    language: row.language,
-    approvals: row.approvals || [],
-  }
-}
 
 const STATUS_CONFIG = {
   approved: {
@@ -76,14 +57,8 @@ export default function VerifyPage() {
   useEffect(() => {
     async function load() {
       try {
-        const { data, error } = await supabase
-          .from('documents')
-          .select('*')
-          .eq('id', id)
-          .maybeSingle()
-        if (error) throw new Error(error.message)
-        if (!data) throw new Error('Document not found.')
-        setDoc(toDoc(data))
+        const doc = await mockApi.getPublicDocumentVerification(id)
+        setDoc(doc)
       } catch (err) {
         setError(err.message)
       } finally {
