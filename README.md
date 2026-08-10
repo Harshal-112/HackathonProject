@@ -1,14 +1,13 @@
 # 🏛️ Smart Digital Documentation System (SDDS)
-> **Government of Maharashtra — Digital Document Management & Verification Portal**
+> **Digital Document Management & Verification Portal**
 
 ![React](https://img.shields.io/badge/React-18.3-blue?logo=react)
 ![Vite](https://img.shields.io/badge/Vite-5.4-purple?logo=vite)
 ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-emerald?logo=supabase)
-![TailwindCSS](https://img.shields.io/badge/Tailwind-CSS-3.4-38bdf8?logo=tailwindcss)
 ![Tesseract.js](https://img.shields.io/badge/OCR-Tesseract.js%20WASM-orange)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-A production-ready, enterprise-grade, privacy-focused Digital Document Management and Public Verification System designed for District Collector Offices, Municipal Corporations, Taluka Offices, Revenue Departments, RTOs, Gram Panchayats, and Citizens.
+A digital document management and public verification system built for District Collector Offices, Municipal Corporations, Taluka Offices, Revenue Departments, RTOs, and Gram Panchayats — built for **Smart Kopargaon Hackathon (SKH 2026)** by **Team Mavericks**.
 
 ---
 
