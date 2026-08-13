@@ -14,31 +14,7 @@ A digital document management and public verification system built for District 
 
 ## 🌟 Key System Capabilities & Architectural Innovations
 
-### 🔒 1. End-to-End Encrypted Mode & Client-Side PII Scrubbing
-* **100% In-Browser Local Processing**: When **`🔒 E2E Encrypted Mode`** is toggled ON in the top navigation bar, OCR text extraction, document classification, indexing, and metadata extraction execute **entirely inside the browser via WebAssembly (Tesseract.js)**. Zero data leaves the local device.
-* **Automated PII Masker**: When running in Normal AI Mode, citizen **Aadhaar**, **PAN**, **Phone**, **Email**, **Voter ID**, **Passport**, and **GST** numbers are automatically scrubbed on the client side before sending text to external AI endpoints (DPDP Act 2023 compliant).
-
-### 🤖 2. Global Floating AI Chatbot Assistant
-* **Accessible Across Every Page**: A floating chat widget available in the bottom-right corner of all tabs (`Dashboard`, `Upload`, `Documents`, `Settings`, etc.).
-* **Quick Action Chips**: Instant shortcuts for `📊 Show document stats`, `🔍 Find pending documents`, `📋 Recent uploads`, and `❓ How to upload a document?`.
-* **Clean Formatting**: Formats markdown headings, bold text, bullet lists (`•`), and horizontal dividers without raw symbols (`###`, `***`).
-
-### 🏁 3. Public QR Code Verification Portal (`/verify/:id`)
-* **Login-Free Verification**: Anyone can scan a printed QR code or visit `/verify/:id` to check document authenticity.
-* **Zero PII Exposure**: Uses `getPublicDocumentVerification()` to return **only non-sensitive public fields** (`title`, `status`, `documentNumber`, `department`, `category`, `createdAt`, `approvals`), shielding raw OCR text, internal file paths, and citizen PII.
-* **Downloadable SVG QR**: One-click vector QR code export for official physical printouts.
-
-### 📄 4. Multi-Language OCR & Automatic AI Metadata Extraction
-* **Languages Supported**: **English**, **Marathi (Devanagari script)**, and **Hindi**.
-* **Pre-Processing Pipeline**: 3× image upscaling, ±8° deskewing, Sauvola adaptive binarization, and median noise reduction filter.
-* **Instant Auto-Fill**: Drag-and-dropping a scanned document auto-populates **Title**, **Department**, **Category**, **Priority**, and **2-3 Sentence AI Summaries**.
-
-### 🔍 5. AI-Powered Semantic Smart Search
-* **Natural Language Query Matching**: Gemini AI parses queries like *"urgent land files from Revenue Department"* or *"recruitment notices"* and ranks matching documents by semantic relevance.
-* **Contextual OCR Snippet Previews**: Displays matching text snippets under search result cards.
-* **Client-Side Fallback**: Uses Levenshtein fuzzy matching and weighted keyword scoring when offline or in E2E Encrypted Mode.
-
-### 💡 6. Explainable AI (XAI) Engine & Decision Transparency
+### 💡 1. Explainable AI (XAI) Engine & Decision Transparency
 * **Weighted Feature Saliency (100% Total)**: Every classification decision breaks down contributions into 5 standardized, deterministic signals:
   - **Document Title Match (30%)**: Matches category title patterns (e.g. *"7/12 Extract"*, *"प्राध्यापक भरती"*).
   - **Keyword Density (25%)**: Evaluates domain keyword frequency in OCR text.
@@ -49,6 +25,30 @@ A digital document management and public verification system built for District 
 * **Dual-Engine Mechanism Consensus**: Compares local rule-based classifier against Gemini AI classifier, computing confidence deltas and issuing `Engines Agree` or `Engines Disagree` alerts.
 * **Low-Confidence Handling**: Automatically flags low-confidence results ($<60\%$) or mechanism disagreements for **Manual Review Required**.
 * **Decoupled Department Routing**: Separates document classification from administrative department routing with transparent, rule-specific explanations.
+
+### 🔒 2. End-to-End Encrypted Mode & Client-Side PII Scrubbing
+* **100% In-Browser Local Processing**: When **`🔒 E2E Encrypted Mode`** is toggled ON in the top navigation bar, OCR text extraction, document classification, indexing, and metadata extraction execute **entirely inside the browser via WebAssembly (Tesseract.js)**. Zero data leaves the local device.
+* **Automated PII Masker**: When running in Normal AI Mode, citizen **Aadhaar**, **PAN**, **Phone**, **Email**, **Voter ID**, **Passport**, and **GST** numbers are automatically scrubbed on the client side before sending text to external AI endpoints (DPDP Act 2023 compliant).
+
+### 🤖 3. Global Floating AI Chatbot Assistant
+* **Accessible Across Every Page**: A floating chat widget available in the bottom-right corner of all tabs (`Dashboard`, `Upload`, `Documents`, `Settings`, etc.).
+* **Quick Action Chips**: Instant shortcuts for `📊 Show document stats`, `🔍 Find pending documents`, `📋 Recent uploads`, and `❓ How to upload a document?`.
+* **Clean Formatting**: Formats markdown headings, bold text, bullet lists (`•`), and horizontal dividers without raw symbols (`###`, `***`).
+
+### 🏁 4. Public QR Code Verification Portal (`/verify/:id`)
+* **Login-Free Verification**: Anyone can scan a printed QR code or visit `/verify/:id` to check document authenticity.
+* **Zero PII Exposure**: Uses `getPublicDocumentVerification()` to return **only non-sensitive public fields** (`title`, `status`, `documentNumber`, `department`, `category`, `createdAt`, `approvals`), shielding raw OCR text, internal file paths, and citizen PII.
+* **Downloadable SVG QR**: One-click vector QR code export for official physical printouts.
+
+### 📄 5. Multi-Language OCR & Automatic AI Metadata Extraction
+* **Languages Supported**: **English**, **Marathi (Devanagari script)**, and **Hindi**.
+* **Pre-Processing Pipeline**: 3× image upscaling, ±8° deskewing, Sauvola adaptive binarization, and median noise reduction filter.
+* **Instant Auto-Fill**: Drag-and-dropping a scanned document auto-populates **Title**, **Department**, **Category**, **Priority**, and **2-3 Sentence AI Summaries**.
+
+### 🔍 6. AI-Powered Semantic Smart Search
+* **Natural Language Query Matching**: Gemini AI parses queries like *"urgent land files from Revenue Department"* or *"recruitment notices"* and ranks matching documents by semantic relevance.
+* **Contextual OCR Snippet Previews**: Displays matching text snippets under search result cards.
+* **Client-Side Fallback**: Uses Levenshtein fuzzy matching and weighted keyword scoring when offline or in E2E Encrypted Mode.
 
 ---
 
