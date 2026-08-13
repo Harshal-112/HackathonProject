@@ -1,11 +1,12 @@
 // ---------------------------------------------------------------------------
-// documentClassifier.js — Enhanced document classification
+// documentClassifier.js — Rule-Based Document Classification
 //
-// Improvements:
-//   1. 15+ document types (previously 6)
-//   2. Real confidence scoring based on keyword match count
-//   3. Multi-keyword scoring — picks highest scoring type
-//   4. Bilingual keywords (English + Marathi/Hindi) for all types
+// Classifies document text using weighted keyword & pattern matching.
+// Features:
+//   - 15+ Indian & Maharashtra state government document types
+//   - Bilingual pattern matching (English + Marathi Devanagari)
+//   - Disambiguates Government Orders/Resolutions (GRs) and Corrigendums
+//     from Court Orders
 // ---------------------------------------------------------------------------
 
 const DOC_TYPES = [
@@ -18,7 +19,7 @@ const DOC_TYPES = [
   {
     type: 'Aadhaar Card',
     category: 'Identity',
-    keywords: ['aadhaar', 'aadhar', 'unique identification authority', 'uidai', 'आधार', 'आधार कार्ड', 'विशिष्ट ओळख'],
+    keywords: ['aadhaar', 'aadhar', 'unique identification authority', 'uidai', 'आधार', 'आधार कार्ड', 'विशिष्ट ओळख', 'भारत सरकार'],
     weight: 5,
   },
   {
@@ -96,8 +97,21 @@ const DOC_TYPES = [
   {
     type: 'Court Order',
     category: 'Legal',
-    keywords: ['court', 'high court', 'district court', 'order', 'judgment', 'petitioner', 'respondent', 'न्यायालय', 'आदेश', 'निर्णय'],
-    weight: 3,
+    // Specific judicial keywords — removed generic 'order' and 'आदेश' which caused false positives on Government GRs/Corrigendums
+    keywords: ['court', 'high court', 'district court', 'supreme court', 'judgment', 'judgement', 'petitioner', 'respondent', 'न्यायालय', 'मा. न्यायालय', 'कोर्ट', 'याचिका'],
+    weight: 4,
+  },
+  {
+    type: 'Government Order/Letter',
+    category: 'Administration',
+    // Enhanced with GR, Corrigendum, Circular, and department-specific order terms
+    keywords: [
+      'government of maharashtra', 'महाराष्ट्र शासन', 'शासन निर्णय', 'शुद्धिपत्रक', 'शुद्धीपत्रक',
+      'सरकार', 'परिपत्रक', 'circular', 'government order', 'corrigendum', 'resolution',
+      'सार्वजनिक आरोग्य विभाग', 'विभाग', 'मंजुरी', 'अध्यादेश', 'राजपत्र', 'gazette',
+      'जिल्हा परिषद', 'ग्रामपंचायत', 'पंचायत', 'तहसील', 'महालेखापाल', 'कार्यालय'
+    ],
+    weight: 4,
   },
   {
     type: 'Land Record (7/12)',
@@ -135,15 +149,18 @@ const DOC_TYPES = [
     keywords: ['university', 'college', 'semester', 'degree', 'marksheet', 'result', 'विद्यापीठ', 'महाविद्यालय', 'गुणपत्रिका', 'परीक्षा'],
     weight: 3,
   },
-  {
-    type: 'Government Order/Letter',
-    category: 'Administration',
-    keywords: ['government of maharashtra', 'शासन', 'सरकार', 'जिल्हा परिषद', 'ग्रामपंचायत', 'पंचायत', 'तहसील', 'महालेखापाल', 'कार्यालय', 'विभाग', 'government order', 'circular', 'परिपत्रक'],
-    weight: 2,
-  },
 ]
 
 export function classifyDocument(text) {
+  if (!text || typeof text !== 'string') {
+    return {
+      type: 'Other',
+      category: 'General',
+      confidence: 30,
+      matchedKeywords: 0,
+    }
+  }
+
   const t = text.toLowerCase()
   let bestMatch = null
   let bestScore = 0
@@ -161,12 +178,12 @@ export function classifyDocument(text) {
 
     if (score > bestScore) {
       bestScore = score
-      // Compute real confidence: (matchCount / total keywords) * 100, capped realistically
-      const rawConfidence = Math.round((matchCount / Math.min(docType.keywords.length, 5)) * 100)
+      // Compute realistic confidence based on match density and type weight
+      const rawConfidence = Math.round((matchCount / Math.min(docType.keywords.length, 4)) * 85 + (docType.weight * 3))
       bestMatch = {
         type: docType.type,
         category: docType.category,
-        confidence: Math.min(98, Math.max(50, rawConfidence)),
+        confidence: Math.min(96, Math.max(35, rawConfidence)),
         matchedKeywords: matchCount,
       }
     }
@@ -175,7 +192,7 @@ export function classifyDocument(text) {
   return bestMatch || {
     type: 'Other',
     category: 'General',
-    confidence: 40,
+    confidence: 35,
     matchedKeywords: 0,
   }
 }

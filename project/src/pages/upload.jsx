@@ -5,6 +5,7 @@ import {
   UploadCloud, FileText, Image, FileCheck, X, ScanText, Brain,
   CheckCircle2, AlertCircle, Sparkles, ArrowRight, Wand2, Eye,
   ChevronDown, ChevronUp, Zap, RefreshCw, Check, ShieldCheck, ShieldOff,
+  Fingerprint, CreditCard, Phone, Mail, Building2, UserCheck, BookOpen, Shield,
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useToast } from '@/lib/toast-context'
@@ -20,6 +21,8 @@ import { useOCR } from '@/hooks/useOCR'
 import { isAIAvailable } from '@/services/aiService'
 import { autoRouteDocument } from '@/services/workflowAutomation'
 import { usePrivacy } from '@/lib/privacy-context'
+import { generateXAIExplanation, detectPII } from '@/services/xaiEngine'
+import { XAIPanel } from '@/components/shared/xai-panel'
 
 const ACCEPTED_TYPES = ['.pdf', '.jpg', '.jpeg', '.png', '.docx']
 const MAX_SIZE = 10 * 1024 * 1024
@@ -54,6 +57,9 @@ export default function UploadPage() {
   const [showPreview, setShowPreview] = useState(false)
   const [autoFilled, setAutoFilled] = useState(false)
   const [cachedOcrData, setCachedOcrData] = useState(null)
+  const [piiItems, setPiiItems] = useState([])
+  const [xaiData, setXaiData] = useState(null)
+  const [piiMaskingActive, setPiiMaskingActive] = useState(true)
 
   const [metadata, setMetadata] = useState({
     title: '',
@@ -118,6 +124,14 @@ export default function UploadPage() {
         setAutoFilled(true)
         setCachedOcrData(ocrData)
 
+        // PII Detection
+        const detectedPII = detectPII(ocrData.ocrText || '')
+        setPiiItems(detectedPII)
+
+        // XAI Explanation
+        const xai = generateXAIExplanation(ocrData, autoRoute)
+        setXaiData(xai)
+
         setOcrPreview({
           text: ocrData.ocrText?.slice(0, 500) || '',
           confidence: ocrData.ocrConfidence,
@@ -174,6 +188,8 @@ export default function UploadPage() {
         setOcrPreview(null)
         setCachedOcrData(null)
         setAutoFilled(false)
+        setPiiItems([])
+        setXaiData(null)
         setMetadata({
           title: '',
           department: user?.department || 'revenue',
@@ -479,8 +495,94 @@ export default function UploadPage() {
                         </motion.div>
                       )}
                     </AnimatePresence>
+
+                    {/* PII Detection & Protection */}
+                    {piiItems.length > 0 && (
+                      <div className="mt-4 rounded-lg border border-rose-200 dark:border-rose-800/50 overflow-hidden">
+                        <div className="flex items-center justify-between px-3 py-2.5 bg-gradient-to-r from-rose-50 to-transparent dark:from-rose-900/20">
+                          <div className="flex items-center gap-2">
+                            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-rose-100 dark:bg-rose-900/30">
+                              <Shield className="h-3 w-3 text-rose-600 dark:text-rose-400" />
+                            </div>
+                            <span className="text-xs font-semibold text-rose-700 dark:text-rose-300">
+                              PII Detection
+                            </span>
+                            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400">
+                              {piiItems.length} item{piiItems.length > 1 ? 's' : ''} found
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setPiiMaskingActive(!piiMaskingActive)}
+                            className={cn(
+                              'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent p-0.5 transition-colors duration-200 ease-in-out focus:outline-none',
+                              piiMaskingActive ? 'bg-emerald-500' : 'bg-muted',
+                            )}
+                            title={piiMaskingActive ? 'Auto-masking active' : 'Auto-masking off'}
+                          >
+                            <span className={cn(
+                              'pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out',
+                              piiMaskingActive ? 'translate-x-4' : 'translate-x-0',
+                            )} />
+                          </button>
+                        </div>
+                        <div className="px-3 py-2 space-y-1.5">
+                          {piiItems.map((pii, i) => {
+                            const PiiIcon = {
+                              Fingerprint, CreditCard, Phone, Mail,
+                              Building2, UserCheck, BookOpen,
+                            }[pii.icon] || Shield
+                            return (
+                              <div
+                                key={i}
+                                className="flex items-center gap-2 rounded-md bg-muted/40 px-2.5 py-1.5"
+                              >
+                                <PiiIcon className={cn(
+                                  'h-3 w-3 shrink-0',
+                                  pii.severity === 'high' ? 'text-rose-500' : 'text-amber-500',
+                                )} />
+                                <span className="text-[10px] font-semibold text-muted-foreground w-14 shrink-0">
+                                  {pii.type}
+                                </span>
+                                <code className="text-[10px] font-mono text-foreground/80 truncate flex-1">
+                                  {piiMaskingActive ? pii.masked : pii.original}
+                                </code>
+                                <span className={cn(
+                                  'text-[9px] font-medium px-1.5 py-0.5 rounded-full shrink-0',
+                                  pii.severity === 'high'
+                                    ? 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400'
+                                    : 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
+                                )}>
+                                  {pii.severity}
+                                </span>
+                              </div>
+                            )
+                          })}
+                          <p className="text-[10px] text-muted-foreground/70 pt-1 flex items-center gap-1">
+                            {piiMaskingActive ? (
+                              <><ShieldCheck className="h-3 w-3 text-emerald-500" /> PII is auto-masked before AI analysis</>
+                            ) : (
+                              <><AlertCircle className="h-3 w-3 text-amber-500" /> PII masking is disabled — sensitive data may be sent to AI</>
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* No PII found message */}
+                    {piiItems.length === 0 && ocrPreview && (
+                      <div className="mt-3 flex items-center gap-2 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 px-3 py-2">
+                        <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                        <span className="text-xs text-emerald-700 dark:text-emerald-300 font-medium">
+                          No PII detected in this document
+                        </span>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
+
+                {/* XAI Panel */}
+                {xaiData && <XAIPanel xaiData={xaiData} />}
               </motion.div>
             )}
           </AnimatePresence>

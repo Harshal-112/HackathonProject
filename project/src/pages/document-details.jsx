@@ -21,6 +21,8 @@ import { Modal } from '@/components/ui/modal'
 import { DEPARTMENTS, CATEGORIES, PRIORITIES } from '@/lib/mock-data'
 import { formatDate, formatDateTime, formatBytes, timeAgo, cn } from '@/lib/utils'
 import { AIInsightsPanel } from '@/components/shared/ai-insights-panel'
+import { XAIPanel } from '@/components/shared/xai-panel'
+import { generateXAIExplanation } from '@/services/xaiEngine'
 
 export default function DocumentDetailsPage() {
   const { id } = useParams()
@@ -340,6 +342,19 @@ export default function DocumentDetailsPage() {
         <div className="space-y-6">
           {/* AI Insights Panel */}
           <AIInsightsPanel doc={doc} />
+
+          {/* XAI Explainability Panel */}
+          <XAIPanel xaiData={generateXAIExplanation({
+            ocrConfidence: doc.ocrConfidence,
+            ocrText: doc.ocrText,
+            documentType: doc.documentType,
+            language: doc.language,
+            metadata: doc.metadata,
+          }, {
+            department: doc.department,
+            category: doc.category,
+            priority: doc.priority,
+          })} />
 
           <Card>
             <CardHeader><CardTitle className="text-base">Document Info</CardTitle></CardHeader>
