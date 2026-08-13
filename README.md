@@ -26,7 +26,7 @@ A digital document management and public verification system built for District 
 * **Low-Confidence Handling**: Automatically flags low-confidence results ($<60\%$) or mechanism disagreements for **Manual Review Required**.
 * **Decoupled Department Routing**: Separates document classification from administrative department routing with transparent, rule-specific explanations.
 
-### 🔒 2. End-to-End Encrypted Mode & Client-Side PII Scrubbing
+### 🔒 2. Confidentiality Mode & Client-Side PII Scrubbing
 * **100% In-Browser Local Processing**: When **`🔒 E2E Encrypted Mode`** is toggled ON in the top navigation bar, OCR text extraction, document classification, indexing, and metadata extraction execute **entirely inside the browser via WebAssembly (Tesseract.js)**. Zero data leaves the local device.
 * **Automated PII Masker**: When running in Normal AI Mode, citizen **Aadhaar**, **PAN**, **Phone**, **Email**, **Voter ID**, **Passport**, and **GST** numbers are automatically scrubbed on the client side before sending text to external AI endpoints (DPDP Act 2023 compliant).
 
@@ -106,6 +106,11 @@ smartDocumentation/
 ```
 
 ---
+
+
+## 🚀 Live Demo
+Explore the working prototype here: [Smart Digital Documentation System](https://smartdocumentatiion.netlify.app/) 
+
 
 ## ⚡ Getting Started & Setup Guide
 
