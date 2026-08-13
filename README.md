@@ -5,6 +5,7 @@
 ![Vite](https://img.shields.io/badge/Vite-5.4-purple?logo=vite)
 ![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-emerald?logo=supabase)
 ![Tesseract.js](https://img.shields.io/badge/OCR-Tesseract.js%20WASM-orange)
+![XAI Engine](https://img.shields.io/badge/AI-Explainable%20AI%20%28XAI%29-violet)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
 A digital document management and public verification system built for District Collector Offices, Municipal Corporations, Taluka Offices, Revenue Departments, RTOs, and Gram Panchayats — built for **Smart Kopargaon Hackathon (SKH 2026)** by **Team Mavericks**.
@@ -37,6 +38,18 @@ A digital document management and public verification system built for District 
 * **Contextual OCR Snippet Previews**: Displays matching text snippets under search result cards.
 * **Client-Side Fallback**: Uses Levenshtein fuzzy matching and weighted keyword scoring when offline or in E2E Encrypted Mode.
 
+### 💡 6. Explainable AI (XAI) Engine & Decision Transparency
+* **Weighted Feature Saliency (100% Total)**: Every classification decision breaks down contributions into 5 standardized, deterministic signals:
+  - **Document Title Match (30%)**: Matches category title patterns (e.g. *"7/12 Extract"*, *"प्राध्यापक भरती"*).
+  - **Keyword Density (25%)**: Evaluates domain keyword frequency in OCR text.
+  - **Issuing Organization (20%)**: Identifies government office header patterns.
+  - **OCR Quality Score (15%)**: Incorporates character recognition confidence.
+  - **Date & Urgency Signals (10%)**: Analyzes submission deadlines and emergency keywords.
+* **Observable Decision Trace**: Step-by-step audit log tracing OCR ingestion, pattern matches, mechanism evaluations, routing decisions, and urgency assignments without hidden LLM claims.
+* **Dual-Engine Mechanism Consensus**: Compares local rule-based classifier against Gemini AI classifier, computing confidence deltas and issuing `Engines Agree` or `Engines Disagree` alerts.
+* **Low-Confidence Handling**: Automatically flags low-confidence results ($<60\%$) or mechanism disagreements for **Manual Review Required**.
+* **Decoupled Department Routing**: Separates document classification from administrative department routing with transparent, rule-specific explanations.
+
 ---
 
 ## 👥 Role-Based Access Control (RBAC)
@@ -47,6 +60,7 @@ A digital document management and public verification system built for District 
 | **Upload Documents** (`/upload`) | ✅ | ✅ | ❌ | ✅ |
 | **Document Directory** (`/documents`) | ✅ | ✅ | ✅ | ✅ |
 | **Public QR Verification** (`/verify/:id`) | ✅ | ✅ | ✅ | ✅ |
+| **Explainable AI (XAI) Panel** | ✅ | ✅ | ✅ | ✅ |
 | **Floating AI Assistant** | ✅ | ✅ | ✅ | ✅ |
 | **Approvals Queue** (`/approvals`) | ✅ | ✅ | ✅ | ❌ |
 | **Audit Trail** (`/audit`) | ✅ | ✅ | ✅ | ❌ |
@@ -66,7 +80,7 @@ smartDocumentation/
     ├── src/
     │   ├── components/
     │   │   ├── layout/        # Sidebar, Navbar, Layout, FloatingChatbot, ErrorBoundary
-    │   │   ├── shared/        # PageHeader, Badges, EmptyState
+    │   │   ├── shared/        # PageHeader, Badges, XAIPanel, AIInsightsPanel
     │   │   └── ui/            # Button, Card, Input, Modal, Badge, Skeleton
     │   ├── lib/
     │   │   ├── auth-context.jsx    # Supabase Auth state & profile reconciliation
@@ -74,37 +88,21 @@ smartDocumentation/
     │   │   ├── theme-context.jsx   # Dark / Light theme provider
     │   │   ├── toast-context.jsx   # Toast notification provider
     │   │   ├── mock-api.js         # Supabase client API wrapper
-    │   │   ├── mock-data.js        # Departments, categories & lookup data
-    │   │   └── supabase.js         # Supabase client initialization
+    │   │   └── mock-data.js        # Departments, categories & DEMO_SETTINGS
     │   ├── pages/
-    │   │   ├── dashboard.jsx       # Metrics cards & distribution charts
-    │   │   ├── upload.jsx          # Drag & drop OCR upload with instant auto-fill
-    │   │   ├── document-list.jsx   # Document table with filters & pagination
-    │   │   ├── document-details.jsx# OCR text, AI Insights Panel, metadata editor
+    │   │   ├── upload.jsx          # Drag & drop OCR upload with instant auto-fill & XAI preview
+    │   │   ├── document-details.jsx# OCR text, AI Insights Panel, XAI Panel
     │   │   ├── verify.jsx          # Public QR verification portal
-    │   │   ├── notifications.jsx   # Real-time notifications with filter pills
     │   │   ├── search.jsx          # Full-width AI semantic search
     │   │   ├── approvals.jsx       # Approve / Reject / Request Changes queue
-    │   │   ├── audit-trail.jsx     # Activity logs with IP & user agent tracking
-    │   │   ├── reports.jsx         # Analytics reports with CSV/PDF export
-    │   │   ├── users.jsx           # User role management (Admin)
-    │   │   ├── settings.jsx        # System settings (Admin)
-    │   │   ├── forgot-password.jsx # Supabase Auth password recovery
-    │   │   ├── reset-password.jsx  # New password entry page
-    │   │   ├── login.jsx           # Login page
-    │   │   └── register.jsx        # Registration page
+    │   │   └── ...
     │   ├── services/
+    │   │   ├── xaiEngine.js        # XAI Saliency, Decision Trace, Consensus engine
+    │   │   ├── documentClassifier.js# Disambiguated GR/Corrigendum & court classifier
     │   │   ├── aiService.js        # Gemini AI API calls, PII masker, AI search
     │   │   ├── ocrEngine.js        # Tesseract.js WASM multi-lingual OCR pipeline
-    │   │   ├── metadataService.js  # Heuristic Devanagari & English rule parser
-    │   │   ├── smartSearch.js      # Client-side fuzzy search & snippet extractor
     │   │   └── workflowAutomation.js# Auto-routing decision engine
-    │   ├── App.jsx                 # Routes setup
-    │   ├── main.jsx                # Entry point with ErrorBoundary
-    │   └── index.css               # Design system & Tailwind utilities
-    ├── package.json
-    ├── tailwind.config.js
-    └── vite.config.js
+    └── package.json
 ```
 
 ---
