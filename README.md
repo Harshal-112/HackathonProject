@@ -27,7 +27,7 @@ A digital document management and public verification system built for District 
 * **Decoupled Department Routing**: Separates document classification from administrative department routing with transparent, rule-specific explanations.
 
 ### 🔒 2. Confidentiality Mode & Client-Side PII Scrubbing
-* **100% In-Browser Local Processing**: When **`🔒 E2E Encrypted Mode`** is toggled ON in the top navigation bar, OCR text extraction, document classification, indexing, and metadata extraction execute **entirely inside the browser via WebAssembly (Tesseract.js)**. Zero data leaves the local device.
+* **100% In-Browser Local Processing**: When **`🔒 Confidentiality Mode`** is toggled ON in the top navigation bar, OCR text extraction, document classification, indexing, and metadata extraction execute **entirely inside the browser via WebAssembly (Tesseract.js)**. Zero data leaves the local device.
 * **Automated PII Masker**: When running in Normal AI Mode, citizen **Aadhaar**, **PAN**, **Phone**, **Email**, **Voter ID**, **Passport**, and **GST** numbers are automatically scrubbed on the client side before sending text to external AI endpoints (DPDP Act 2023 compliant).
 
 ### 🤖 3. Global Floating AI Chatbot Assistant
@@ -84,7 +84,7 @@ smartDocumentation/
     │   │   └── ui/            # Button, Card, Input, Modal, Badge, Skeleton
     │   ├── lib/
     │   │   ├── auth-context.jsx    # Supabase Auth state & profile reconciliation
-    │   │   ├── privacy-context.jsx # End-to-End Encrypted Mode state
+    │   │   ├── privacy-context.jsx # Confidentiality Mode state
     │   │   ├── theme-context.jsx   # Dark / Light theme provider
     │   │   ├── toast-context.jsx   # Toast notification provider
     │   │   ├── mock-api.js         # Supabase client API wrapper
