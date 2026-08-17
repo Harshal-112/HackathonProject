@@ -1,48 +1,34 @@
 // ---------------------------------------------------------------------------
 // aiService.js
 //
-// Free AI-powered document analysis.
+// AI-assisted document analysis using secure server-side processing.
+// The Gemini API key is NEVER exposed in the frontend; all requests are routed
+// through an authenticated Supabase Edge Function with server-side rate
+// limiting and pre-flight PII sanitization.
+//
 // Falls back gracefully to rule-based extraction when:
-//   - No API key is configured (VITE_GEMINI_API_KEY not set)
-//   - Strict Confidentiality Mode is active (user toggled it ON)
-//   - Quota is exceeded (429)
-//   - Network error / any other failure
-//
-// Free AI tier:
-//   - 15 requests per minute
-//   - 1,500 requests per day
-//   - No credit card required
-//
-// Usage:
-//   import { enhanceMetadataWithAI, chatWithAI } from '@/services/aiService'
+//   - Backend AI service is not deployed / offline
+//   - Confidential Mode is active (user toggled it ON)
+//   - Rate limit is exceeded
+//   - Unmaskable sensitive data is detected (safety fail-soft)
 // ---------------------------------------------------------------------------
 
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || ''
-const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta'
+import { supabase } from '../lib/supabase.js'
+import { sanitizeForAI, maskPII } from './piiService.js'
 
-// Try these model names in order — placing active working models first
-const AI_MODELS = [
-  'gemini-flash-latest',
-  'gemini-2.5-flash-lite',
-  'gemini-flash-lite-latest',
-  'gemini-3.5-flash',
-  'gemini-2.0-flash-lite',
-  'gemini-2.0-flash',
-]
+export { maskPII }
 
+/**
+ * Checks if the backend AI integration is accessible.
+ */
 export function isAIAvailable() {
-  // Accepts both traditional 'AIza...' keys and new Google AI Studio 'AQ...' keys
-  return Boolean(
-    GEMINI_API_KEY &&
-    GEMINI_API_KEY.trim() !== '' &&
-    (GEMINI_API_KEY.startsWith('AIza') || GEMINI_API_KEY.startsWith('AQ.'))
-  )
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
+  return Boolean(supabaseUrl && supabaseUrl.trim() !== '')
 }
 
-// ---------------------------------------------------------------------------
-// Check if Strict Confidentiality Mode is active (reads localStorage directly
-// so it works outside React without needing the context).
-// ---------------------------------------------------------------------------
+/**
+ * Check if Confidential Mode is active.
+ */
 export function isConfidentialMode() {
   try {
     return localStorage.getItem('sdds_confidential_mode') === 'true'
@@ -51,119 +37,79 @@ export function isConfidentialMode() {
   }
 }
 
-// ---------------------------------------------------------------------------
-// PII Masker — replaces citizen-specific sensitive data before sending
-// any text to external AI. Document structure / headings are preserved.
-// ---------------------------------------------------------------------------
-export function maskPII(text) {
-  if (!text) return text
-  return text
-    // Aadhaar: 12 digit groups (xxxx xxxx xxxx or xxxx-xxxx-xxxx)
-    .replace(/\b(\d{4})[\s-](\d{4})[\s-](\d{4})\b/g, '[AADHAAR_REDACTED]')
-    // PAN card: AAAAA9999A
-    .replace(/\b[A-Z]{5}[0-9]{4}[A-Z]\b/g, '[PAN_REDACTED]')
-    // GST: 15-char GST format
-    .replace(/\b\d{2}[A-Z]{5}\d{4}[A-Z]{1}[A-Z\d]{1}[Z]{1}[A-Z\d]{1}\b/g, '[GST_REDACTED]')
-    // Phone numbers (Indian formats)
-    .replace(/\b(?:\+91[\s-]?)?[6-9]\d{9}\b/g, '[PHONE_REDACTED]')
-    // Email addresses
-    .replace(/[\w._%+-]+@[\w.-]+\.[a-z]{2,}/gi, '[EMAIL_REDACTED]')
-    // Voter ID: 3 letters + 7 digits
-    .replace(/\b[A-Z]{3}[0-9]{7}\b/g, '[VOTERID_REDACTED]')
-    // Passport: 1 letter + 7 digits
-    .replace(/\b[A-Z][0-9]{7}\b/g, '[PASSPORT_REDACTED]')
-}
-
-// ---------------------------------------------------------------------------
-// Core fetch wrapper — tries each model name in order, stops on first success
-// ---------------------------------------------------------------------------
+/**
+ * Invokes the secure server-side Gemini Edge Function.
+ * Sanitizes all text parts with PII masking before dispatching.
+ */
 async function callGemini(parts, systemInstruction = '') {
-  if (!isAIAvailable()) {
-    throw new Error('AI key not configured')
+  if (isConfidentialMode()) {
+    throw new Error('Confidential Mode is active. Cloud AI calls are disabled.')
   }
 
-  // Mask PII in all text parts before sending
-  const safeParts = parts.map((p) =>
-    p.text ? { ...p, text: maskPII(p.text) } : p
-  )
-
-  const body = {
-    contents: [{ role: 'user', parts: safeParts }],
-    generationConfig: {
-      temperature: 0.1,
-      topP: 0.9,
-      maxOutputTokens: 2048,
-    },
-  }
-
-  if (systemInstruction) {
-    body.systemInstruction = { parts: [{ text: systemInstruction }] }
-  }
-
-  let lastError = null
-  for (const model of AI_MODELS) {
-    const url = `${GEMINI_BASE}/models/${model}:generateContent?key=${GEMINI_API_KEY}`
-    try {
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      })
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        const msg = err?.error?.message || res.statusText
-        lastError = new Error(`AI service error ${res.status}: ${msg}`)
-        console.warn(`[AI] Model ${model} returned ${res.status} (${msg}), trying next model...`)
-        continue
+  // 1. Pre-flight PII sanitization across all text parts
+  const safeParts = []
+  for (const part of parts) {
+    if (part.text) {
+      const sanitized = sanitizeForAI(part.text)
+      if (!sanitized.success) {
+        // Redaction could not be guaranteed — skip AI processing safely
+        throw new Error(sanitized.error || 'Sensitive information could not be safely redacted. AI processing was skipped.')
       }
-
-      const data = await res.json()
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
-      if (text) {
-        console.log(`[AI] Successfully generated content using model: ${model}`)
-        return text
-      }
-    } catch (err) {
-      lastError = err
-      console.warn(`[AI] Network error calling ${model}: ${err.message}, trying next model...`)
-      continue
+      safeParts.push({ ...part, text: sanitized.text })
+    } else {
+      safeParts.push(part)
     }
   }
 
-  throw lastError || new Error('No working AI model available')
+  // 2. Invoke server-side Supabase Edge Function
+  try {
+    const { data, error } = await supabase.functions.invoke('gemini-process', {
+      body: {
+        parts: safeParts,
+        systemInstruction,
+        model: 'gemini-1.5-flash',
+      },
+    })
+
+    if (error) {
+      throw new Error(error.message || 'AI backend invocation failed')
+    }
+
+    if (data?.text) {
+      return data.text
+    }
+
+    throw new Error('Empty response from AI service')
+  } catch (err) {
+    // Log safe error without any PII
+    console.warn('[AI Service] Secure Edge Function call notice:', err.message)
+    throw err
+  }
 }
 
-
 // ---------------------------------------------------------------------------
-// Parse JSON from Gemini (robust with fallback sanitization)
+// Parse JSON from LLM (robust with fallback sanitization)
 // ---------------------------------------------------------------------------
 function parseJsonResponse(raw) {
   if (!raw) return null
 
-  // 1. Extract markdown code block content if present
   let cleaned = raw.trim()
   const codeBlockMatch = cleaned.match(/```(?:json)?\s*([\s\S]*?)\s*```/i)
   if (codeBlockMatch) {
     cleaned = codeBlockMatch[1].trim()
   }
 
-  // 2. Extract outermost { ... }
   const jsonObjectMatch = cleaned.match(/\{[\s\S]*\}/)
   if (jsonObjectMatch) {
     cleaned = jsonObjectMatch[0].trim()
   }
 
-  // 3. Try direct JSON parse
   try {
     return JSON.parse(cleaned)
   } catch (_) {
-    // 4. Sanitize common LLM JSON syntax anomalies:
-    // - Remove trailing commas before } or ]
-    // - Escape unescaped control chars / newlines in JSON strings
     try {
       const sanitized = cleaned
-        .replace(/,\s*([}\]])/g, '$1') // trailing commas
+        .replace(/,\s*([}\]])/g, '$1')
         .replace(/[\u0000-\u001F\u007F-\u009F]/g, (match) => {
           if (match === '\n') return '\\n'
           if (match === '\r') return '\\r'
@@ -179,7 +125,7 @@ function parseJsonResponse(raw) {
 }
 
 // ---------------------------------------------------------------------------
-// MAIN: Enhance OCR-extracted metadata with Gemini
+// MAIN: Enhance OCR-extracted metadata with AI
 // ---------------------------------------------------------------------------
 const METADATA_SYSTEM_PROMPT = `You are an expert in analyzing Indian government documents, including Maharashtra state government documents in English, Marathi (Devanagari script), and Hindi. 
 Extract structured information from the OCR text and return ONLY valid JSON with no explanation.
@@ -230,13 +176,10 @@ export async function enhanceMetadataWithAI(ocrText, ruleBasedMeta = {}) {
     const parsed = parseJsonResponse(raw)
 
     if (!parsed) {
-      console.warn('AI metadata parse failed, using rule-based fallback')
       return { aiEnhanced: false, ...ruleBasedMeta }
     }
 
-    // Merge AI result with rule-based, preferring AI for most fields
-    // but keeping rule-based dates/references if AI missed them
-    const merged = {
+    return {
       aiEnhanced: true,
       title: parsed.title || ruleBasedMeta.title || '',
       organization: parsed.organization || ruleBasedMeta.organization || '',
@@ -258,10 +201,8 @@ export async function enhanceMetadataWithAI(ocrText, ruleBasedMeta = {}) {
       keyEntities: parsed.keyEntities || {},
       aiCategory: parsed.category || 'General',
     }
-
-    return merged
   } catch (err) {
-    console.warn('AI enhancement failed, using rule-based fallback:', err.message)
+    console.warn('AI enhancement notice (using rule-based metadata):', err.message)
     return { aiEnhanced: false, ...ruleBasedMeta }
   }
 }
@@ -273,7 +214,7 @@ function mergeArrays(ai, rule) {
 }
 
 // ---------------------------------------------------------------------------
-// AI-Powered Document Summary
+// AI-Assisted Document Summary
 // ---------------------------------------------------------------------------
 export async function generateAISummary(ocrText, classification) {
   if (!isAIAvailable() || !ocrText?.trim() || isConfidentialMode()) {
@@ -293,7 +234,7 @@ Return only the summary text, no JSON, no markdown.`
     const summary = await callGemini([{ text: prompt }])
     return summary?.trim() || null
   } catch (err) {
-    console.warn('AI summary failed:', err.message)
+    console.warn('AI summary notice:', err.message)
     return null
   }
 }
@@ -309,7 +250,7 @@ If asked about specific documents, reference their title and document number.`
 
 export async function chatWithAI(message, documentSummaries = []) {
   if (!isAIAvailable() || isConfidentialMode()) {
-    return null // caller falls back to rule-based chat
+    return null
   }
 
   try {
@@ -328,13 +269,13 @@ Answer helpfully and concisely based on the document data above.`
     const response = await callGemini([{ text: prompt }], CHAT_SYSTEM_PROMPT)
     return response?.trim() || null
   } catch (err) {
-    console.warn('AI chat failed:', err.message)
+    console.warn('AI chat notice:', err.message)
     return null
   }
 }
 
 // ---------------------------------------------------------------------------
-// AI Document Classification (when rule-based gives low confidence)
+// AI Document Classification (used for model comparison / agreement analysis)
 // ---------------------------------------------------------------------------
 export async function classifyWithAI(ocrText) {
   if (!isAIAvailable() || !ocrText?.trim() || isConfidentialMode()) {
@@ -361,7 +302,7 @@ ${ocrText.slice(0, 1000)}`
 }
 
 // ---------------------------------------------------------------------------
-// AI-Powered Smart Search (Semantic Document Matching & Ranking)
+// AI-Assisted Smart Search (Semantic Document Matching)
 // ---------------------------------------------------------------------------
 export async function aiSearchDocuments(query, docs = []) {
   if (!isAIAvailable() || !query?.trim() || isConfidentialMode() || docs.length === 0) {
@@ -382,7 +323,7 @@ export async function aiSearchDocuments(query, docs = []) {
       ocrSnippet: (d.ocrText || '').slice(0, 300),
     }))
 
-    const prompt = `You are a smart search engine for a government document repository.
+    const prompt = `You are a search matching engine for a government document repository.
 Search Query: "${query}"
 
 DOCUMENTS LIST:
@@ -403,8 +344,7 @@ If no documents match, return {"matchingIds": []}. Order the IDs from highest re
     const parsed = parseJsonResponse(raw)
     return Array.isArray(parsed?.matchingIds) ? parsed.matchingIds : null
   } catch (err) {
-    console.warn('[AI Search] Gemini search parsing failed, falling back to smartSearch:', err.message)
+    console.warn('[AI Search] Search parsing notice:', err.message)
     return null
   }
 }
-

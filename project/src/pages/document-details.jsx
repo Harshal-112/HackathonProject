@@ -4,9 +4,10 @@ import { motion } from 'framer-motion'
 import {
   ArrowLeft, FileText, Download, Edit, Trash2, Clock, User, Building2,
   Calendar, Languages, ScanText, Brain, Tag, MapPin, FolderTree,
-  Percent, FileSignature, History, Save, X, MessageSquare, Mail, Phone, Hash, QrCode, ShieldCheck,
+  Percent, FileSignature, History, Save, X, MessageSquare, Mail, Phone, Hash, QrCode, ShieldCheck, Flag,
 } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
+import { api } from '@/lib/api'
 import { mockApi } from '@/lib/mock-api'
 import { useAuth } from '@/lib/auth-context'
 import { useToast } from '@/lib/toast-context'
@@ -36,6 +37,12 @@ export default function DocumentDetailsPage() {
   const [editing, setEditing] = useState(searchParams.get('edit') === '1')
   const [editForm, setEditForm] = useState({})
   const [deleteOpen, setDeleteOpen] = useState(false)
+  // Admin: Flag for Re-verification
+  const [flagOpen, setFlagOpen] = useState(false)
+  const [flagReason, setFlagReason] = useState('')
+  const [flagVerifierId, setFlagVerifierId] = useState('')
+  const [flagVerifiers, setFlagVerifiers] = useState([])
+  const [flagProcessing, setFlagProcessing] = useState(false)
 
   useEffect(() => {
     mockApi.getDocument(id)
@@ -73,6 +80,40 @@ export default function DocumentDetailsPage() {
     }
   }
 
+  const openFlagModal = async () => {
+    // Load active verifiers in the same department for reassignment
+    try {
+      const allUsers = await api.getUsers()
+      const eligible = allUsers.filter(
+        (u) => u.role === 'verifier' && u.status === 'active' && u.department === doc.department && u.id !== doc.assignedVerifierId
+      )
+      setFlagVerifiers(eligible)
+      setFlagVerifierId(eligible[0]?.id || '')
+    } catch (_) {
+      setFlagVerifiers([])
+    }
+    setFlagReason('')
+    setFlagOpen(true)
+  }
+
+  const handleFlagReverification = async () => {
+    if (!flagReason.trim()) {
+      toast({ title: 'Reason required', description: 'Please provide a reason for flagging this document.', variant: 'destructive' })
+      return
+    }
+    setFlagProcessing(true)
+    try {
+      const updated = await api.flagForReverification(doc.id, flagReason, flagVerifierId || null, user)
+      setDoc(updated)
+      setFlagOpen(false)
+      toast({ title: 'Flagged for Re-verification', description: 'Document has been flagged and reassigned.', variant: 'success' })
+    } catch (err) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' })
+    } finally {
+      setFlagProcessing(false)
+    }
+  }
+
   if (loading) return <div className="space-y-4"><Skeleton className="h-8 w-64" /><Skeleton className="h-96" /></div>
   if (error) return <ErrorState message={error} onRetry={() => navigate('/documents')} />
 
@@ -103,6 +144,24 @@ export default function DocumentDetailsPage() {
                 >
                   <ShieldCheck className="h-3.5 w-3.5" /> Verify QR
                 </Button>
+              )}
+              {/* Admin: Flag for Re-verification — only shown when doc is approved or rejected */}
+              {user?.role === 'admin' && ['approved', 'rejected'].includes(doc.status) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 text-violet-600 border-violet-300 hover:bg-violet-50 dark:hover:bg-violet-900/20"
+                  onClick={openFlagModal}
+                >
+                  <Flag className="h-3.5 w-3.5" /> Flag for Re-verification
+                </Button>
+              )}
+              {/* Admin: read-only indicator when already under re-verification */}
+              {user?.role === 'admin' && doc.status === 're_verification' && (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-violet-200 bg-violet-50 dark:bg-violet-900/20 text-xs text-violet-700 dark:text-violet-300 font-medium">
+                  <Flag className="h-3.5 w-3.5" />
+                  Re-verification In Progress
+                </div>
               )}
               <Button variant="destructive" size="sm" onClick={() => setDeleteOpen(true)}>
                 <Trash2 className="h-3.5 w-3.5" /> Delete
@@ -414,9 +473,71 @@ export default function DocumentDetailsPage() {
           <Button variant="destructive" onClick={handleDelete}>Delete</Button>
         </div>
       </Modal>
+
+      {/* Flag for Re-verification Modal (Admin only) */}
+      <Modal
+        open={flagOpen}
+        onClose={() => setFlagOpen(false)}
+        title="🚩 Flag for Re-verification"
+        description={`${doc.title} · ${doc.documentNumber}`}
+      >
+        <div className="space-y-4">
+          <div className="rounded-lg border border-violet-200 bg-violet-50 dark:bg-violet-900/20 p-3 text-xs text-violet-800 dark:text-violet-300">
+            <p className="font-semibold mb-1">What this does</p>
+            <ul className="list-disc list-inside space-y-0.5 opacity-90">
+              <li>Sets document status to <strong>Re-verification Required</strong></li>
+              <li>Preserves the original approval/rejection history permanently</li>
+              <li>Reassigns the document to the selected verifier for fresh review</li>
+              <li>Logs this action to the audit trail as <code>ADMIN_FLAG</code></li>
+            </ul>
+          </div>
+
+          <div>
+            <Label>Reason for Flagging <span className="text-destructive">*</span></Label>
+            <Textarea
+              value={flagReason}
+              onChange={(e) => setFlagReason(e.target.value)}
+              placeholder="Describe why this document needs re-verification (e.g. 'Suspicious approval — document dates appear inconsistent')"
+              className="mt-1.5 min-h-[100px]"
+            />
+          </div>
+
+          {flagVerifiers.length > 0 ? (
+            <div>
+              <Label>Reassign to Verifier</Label>
+              <Select
+                value={flagVerifierId}
+                onChange={(v) => setFlagVerifierId(v)}
+                options={[
+                  { value: '', label: 'Auto-assign (lowest load)' },
+                  ...flagVerifiers.map((v) => ({ value: v.id, label: `${v.name} — ${DEPARTMENTS.find((d) => d.id === v.department)?.name || v.department}` })),
+                ]}
+                className="mt-1.5"
+              />
+            </div>
+          ) : (
+            <div className="rounded-md bg-muted p-3 text-xs text-muted-foreground">
+              No other active verifiers available in this department. The document will be queued for assignment when a verifier becomes available.
+            </div>
+          )}
+
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setFlagOpen(false)} disabled={flagProcessing}>Cancel</Button>
+            <Button
+              className="gap-2 bg-violet-600 hover:bg-violet-700 text-white"
+              onClick={handleFlagReverification}
+              disabled={flagProcessing || !flagReason.trim()}
+            >
+              <Flag className="h-4 w-4" />
+              {flagProcessing ? 'Flagging...' : 'Flag for Re-verification'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }
+
 
 function MetaItem({ icon: Icon, label, value }) {
   return (

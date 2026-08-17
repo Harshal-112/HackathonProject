@@ -99,18 +99,18 @@ export function Navbar({ onMenuClick, notifications = [], onNotificationsChange,
           <span>Search documents...</span>
         </button>
 
-        {/* End-to-End Encrypted Mode Toggle */}
+        {/* Confidential Mode / Normal Mode Toggle */}
         <button
           onClick={() => {
             togglePrivacy()
             toast({
-              title: confidentialMode ? '⚡ Normal Mode Activated' : '🔒 End-to-End Encrypted Mode',
+              title: confidentialMode ? '⚡ Normal Mode Activated' : '🔒 Confidential Mode Activated',
               description: confidentialMode
-                ? 'AI-enhanced analysis is now enabled. PII is auto-masked before any external call.'
-                : 'All AI calls disabled. Processing 100% locally in your browser. Zero data leaves this device.',
+                ? 'AI-enhanced analysis enabled. PII is sanitized before any server call.'
+                : 'All AI calls disabled. OCR and classification run 100% locally in your browser using WASM.',
             })
           }}
-          title={confidentialMode ? 'Switch to Normal Mode' : 'Switch to End-to-End Encrypted Mode'}
+          title={confidentialMode ? 'Switch to Normal Mode' : 'Switch to Confidential Mode'}
           className={cn(
             'hidden sm:flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all border',
             confidentialMode
@@ -119,7 +119,7 @@ export function Navbar({ onMenuClick, notifications = [], onNotificationsChange,
           )}
         >
           {confidentialMode
-            ? <><ShieldCheck className="h-3.5 w-3.5" /> E2E Encrypted</>  
+            ? <><ShieldCheck className="h-3.5 w-3.5" /> Confidential Mode</>  
             : <><ShieldOff className="h-3.5 w-3.5" /> Normal Mode</>}
         </button>
 

@@ -61,11 +61,49 @@ export function AuthProvider({ children }) {
       }
     })
 
+    // --- Real-time suspension enforcement ---------------------------------
+    // Subscribe to changes on this user's profiles row. When an admin sets
+    // status=inactive the UPDATE event fires immediately in this session and
+    // we sign the user out — even if they are currently logged in.
+    let realtimeChannel = null
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!active || !session?.user?.id) return
+      realtimeChannel = supabase
+        .channel(`profile-watch-${session.user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'profiles',
+            filter: `id=eq.${session.user.id}`,
+          },
+          async (payload) => {
+            if (!active) return
+            const updated = payload.new
+            if (updated?.status === 'inactive') {
+              // Account was suspended — sign out immediately
+              await supabase.auth.signOut()
+              setUser(null)
+            } else {
+              // Other profile change (e.g. department reassignment) — refresh
+              try {
+                const profile = await fetchProfile(updated.id)
+                setUser(profile)
+              } catch {}
+            }
+          },
+        )
+        .subscribe()
+    })
+
     return () => {
       active = false
       listener?.subscription?.unsubscribe()
+      if (realtimeChannel) supabase.removeChannel(realtimeChannel)
     }
   }, [])
+
 
   const login = useCallback(async (email, password) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })

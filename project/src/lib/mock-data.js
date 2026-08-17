@@ -35,6 +35,7 @@ export const DOC_STATUSES = [
   { id: 'approved', name: 'Approved', color: '#059669' },
   { id: 'rejected', name: 'Rejected', color: '#dc2626' },
   { id: 'changes', name: 'Changes Requested', color: '#0891b2' },
+  { id: 're_verification', name: 'Re-verification Required', color: '#7c3aed' },
   { id: 'archived', name: 'Archived', color: '#475569' },
 ]
 
@@ -401,7 +402,7 @@ export const DEMO_SETTINGS = {
     email: false,
   },
   privacy: {
-    e2eEncrypted: false,
+    localOnly: false,
     piiMasking: {
       aadhaar: true,
       pan: true,

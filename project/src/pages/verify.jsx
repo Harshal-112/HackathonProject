@@ -84,7 +84,6 @@ export default function VerifyPage() {
   const deptName = doc ? (DEPARTMENTS.find((d) => d.id === doc.department)?.name || doc.department) : ''
   const catName = doc ? (CATEGORIES.find((c) => c.id === doc.category)?.name || doc.category) : ''
   const status = doc ? (STATUS_CONFIG[doc.status] || STATUS_CONFIG.pending) : null
-  const lastApproval = doc?.approvals?.filter((a) => a.action === 'approved').pop()
 
   if (loading) {
     return (
@@ -190,26 +189,9 @@ export default function VerifyPage() {
               </div>
             </div>
 
-            {doc.status === 'approved' && lastApproval && (
-              <div className="rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 p-3">
-                <p className="text-xs text-emerald-700 dark:text-emerald-400 font-semibold uppercase tracking-wide mb-1">
-                  ✅ Approved By
-                </p>
-                <p className="text-sm font-medium">{lastApproval.userName}</p>
-                <p className="text-xs text-muted-foreground">{new Date(lastApproval.timestamp).toLocaleString('en-IN')}</p>
-                {lastApproval.comment && (
-                  <p className="text-xs text-muted-foreground mt-1 italic">"{lastApproval.comment}"</p>
-                )}
-              </div>
-            )}
-
-            <div className="pt-2 border-t">
-              <p className="text-xs text-muted-foreground">
-                Uploaded by: <span className="font-medium text-foreground">{doc.uploadedByName}</span>
-              </p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Last updated: {new Date(doc.updatedAt || doc.createdAt).toLocaleString('en-IN')}
-              </p>
+            <div className="pt-2 border-t flex flex-wrap items-center justify-between text-xs text-muted-foreground">
+              <span>Authenticity Status: <strong className="text-foreground">{doc.isAuthentic ? 'Verified Official Record' : 'Pending / Non-Final'}</strong></span>
+              <span>Last verified: {new Date(doc.updatedAt || doc.createdAt).toLocaleString('en-IN')}</span>
             </div>
           </div>
 

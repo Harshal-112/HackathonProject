@@ -53,7 +53,7 @@ export default function SettingsPage() {
             ...loaded.notifications
           },
           privacy: {
-            e2eEncrypted: loaded.privacy?.e2eEncrypted ?? false,
+            localOnly: loaded.privacy?.localOnly ?? loaded.privacy?.e2eEncrypted ?? false,
             piiMasking: {
               aadhaar: loaded.privacy?.piiMasking?.aadhaar ?? true,
               pan: loaded.privacy?.piiMasking?.pan ?? true,
@@ -83,7 +83,7 @@ export default function SettingsPage() {
           },
           notifications: { approvals: true, uploads: true, system: true, email: false },
           privacy: {
-            e2eEncrypted: false,
+            localOnly: false,
             piiMasking: { aadhaar: true, pan: true, phone: true, email: true, gst: true },
             dataRetention: '90 days',
             auditLog: true
@@ -151,7 +151,7 @@ export default function SettingsPage() {
     { id: 'departments', label: 'Departments', icon: Building2, status: settings.departments?.length.toString() },
     { id: 'categories', label: 'Categories', icon: FileType, status: settings.categories?.length.toString() },
     { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'privacy', label: 'Privacy & Security', icon: Shield, status: settings.privacy?.e2eEncrypted ? 'E2E On' : 'Standard' },
+    { id: 'privacy', label: 'Privacy & Security', icon: Shield, status: settings.privacy?.localOnly ? 'Local' : 'Cloud' },
   ]
 
   return (
@@ -532,27 +532,27 @@ export default function SettingsPage() {
                   <div className="flex items-start justify-between">
                     <div>
                       <h4 className="text-sm font-semibold flex items-center gap-2 text-rose-700 dark:text-rose-400">
-                        <Lock className="h-4 w-4" /> End-to-End Encrypted Mode
+                        <Lock className="h-4 w-4" /> Confidential Mode (Local Processing)
                       </h4>
                       <p className="text-xs text-muted-foreground mt-1 max-w-md">
-                        When enabled, all local data is encrypted. This requires you to enter a passphrase on every session.
+                        When enabled, all OCR extraction and classification run 100% locally in your browser using WebAssembly (Tesseract.js). Cloud AI API calls are completely disabled.
                       </p>
                     </div>
                     <button
                       type="button"
                       onClick={() => {
-                        const newVal = !settings.privacy?.e2eEncrypted;
-                        setSettings({ ...settings, privacy: { ...settings.privacy, e2eEncrypted: newVal } });
+                        const newVal = !settings.privacy?.localOnly;
+                        setSettings({ ...settings, privacy: { ...settings.privacy, localOnly: newVal } });
                         localStorage.setItem('sdds_confidential_mode', newVal.toString());
                       }}
                       className={cn(
                         'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent p-0.5 transition-colors duration-200 ease-in-out focus:outline-none',
-                        settings.privacy?.e2eEncrypted ? 'bg-rose-500' : 'bg-muted',
+                        settings.privacy?.localOnly ? 'bg-rose-500' : 'bg-muted',
                       )}
                     >
                       <span className={cn(
                         'pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out',
-                        settings.privacy?.e2eEncrypted ? 'translate-x-5' : 'translate-x-0',
+                        settings.privacy?.localOnly ? 'translate-x-5' : 'translate-x-0',
                       )} />
                     </button>
                   </div>

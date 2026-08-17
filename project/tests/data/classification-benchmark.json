@@ -1,0 +1,92 @@
+[
+  {
+    "id": "bench_01",
+    "description": "Maharashtra 7/12 Land Record Extract",
+    "text": "महाराष्ट्र शासन महसूल व वन विभाग गाव नमुना सात (७/१२) अधिकार अभिलेख पत्रक गट क्रमांक ४५/२ भूमापन क्रमांक क्षेत्र ०.४५ हेक्टर आर खाते क्रमांक १२८ भोगवटदार वर्ग १",
+    "expectedDepartment": "revenue",
+    "expectedCategory": "land",
+    "expectedType": "Land Record (7/12)",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_02",
+    "description": "Aadhaar Identity Card",
+    "text": "Government of India Unique Identification Authority of India UIDAI Enrollment No 1234/56789/01234 To Ramesh Kumar Sharma 123 Shivaji Nagar Pune Maharashtra 411005 5489 2145 9876 Mera Aadhaar Meri Pehchan",
+    "expectedDepartment": "collector",
+    "expectedCategory": "identity",
+    "expectedType": "Aadhaar Card",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_03",
+    "description": "Permanent Account Number (PAN) Card",
+    "text": "INCOME TAX DEPARTMENT GOVT OF INDIA Permanent Account Number Card ABCDE1234F Father Name SURESH GUPTA Date of Birth 15/08/1990",
+    "expectedDepartment": "collector",
+    "expectedCategory": "identity",
+    "expectedType": "PAN Card",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_04",
+    "description": "Government Resolution (GR) / Health Circular",
+    "text": "महाराष्ट्र शासन सार्वजनिक आरोग्य विभाग शासन निर्णय क्रमांक संकीर्ण-२०२६/प्र.क्र.४५/आरोग्य-३ मंत्रालय मुंबई ४०००३२ तात्काळ अंमलबजावणी बाबत परिपत्रक आरोग्य केंद्र सुविधा",
+    "expectedDepartment": "health",
+    "expectedCategory": "health",
+    "expectedType": "Government Order/Letter",
+    "expectedPriority": "urgent"
+  },
+  {
+    "id": "bench_05",
+    "description": "High Court Legal Order",
+    "text": "IN THE HIGH COURT OF JUDICATURE AT BOMBAY WRIT PETITION NO. 4589 OF 2026 IN THE MATTER OF ARTICLE 226 OF THE CONSTITUTION OF INDIA PETITIONER VERSUS STATE OF MAHARASHTRA RESPONDENT ORDER AND JUDGMENT",
+    "expectedDepartment": "collector",
+    "expectedCategory": "legal",
+    "expectedType": "Court Order",
+    "expectedPriority": "high"
+  },
+  {
+    "id": "bench_06",
+    "description": "GST Commercial Invoice",
+    "text": "TAX INVOICE M/S SHREE ENTERPRISES GSTIN: 27ABCDE1234F1Z5 INVOICE NO: INV-2026-89 DATE: 12-01-2026 BILL TO: PUNE MUNICIPAL CORPORATION TOTAL AMOUNT RS. 45000 SGST CGST PAID",
+    "expectedDepartment": "municipal",
+    "expectedCategory": "finance",
+    "expectedType": "Invoice",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_07",
+    "description": "Caste Validity Certificate",
+    "text": "DISTRICT CASTE CERTIFICATE SCRUTINY COMMITTEE PUNE CASTE VALIDITY CERTIFICATE Form G [See Rule 12] Other Backward Class (OBC) Kunbi Caste Validation No. 4589/2026",
+    "expectedDepartment": "collector",
+    "expectedCategory": "identity",
+    "expectedType": "Caste Certificate",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_08",
+    "description": "Gram Panchayat Property Tax / NOC",
+    "text": "ग्रामपंचायत कार्यालय बाणेर ता. हवेली जि. पुणे नमुना ८ अ मालमत्ता कर पावती / ना हरकत प्रमाणपत्र (NOC) ग्रामसेवक / सरपंच स्वाक्षरी",
+    "expectedDepartment": "panchayat",
+    "expectedCategory": "administration",
+    "expectedType": "NOC",
+    "expectedPriority": "low"
+  },
+  {
+    "id": "bench_09",
+    "description": "University Degree / Academic Marksheet",
+    "text": "SAVITRIBAI PHULE PUNE UNIVERSITY Faculty of Science and Technology Bachelor of Engineering Statement of Marks and Grades Seat No. B19004589 Passing Certificate",
+    "expectedDepartment": "education",
+    "expectedCategory": "education",
+    "expectedType": "University Document",
+    "expectedPriority": "low"
+  },
+  {
+    "id": "bench_10",
+    "description": "Police Station FIR",
+    "text": "FIRST INFORMATION REPORT (Under Section 154 Cr.P.C.) FIR No. 0124/2026 Police Station Shivajinagar Date and Time of Occurrence 10/02/2026 Offence u/s 379 IPC Complainant Name",
+    "expectedDepartment": "collector",
+    "expectedCategory": "legal",
+    "expectedType": "FIR",
+    "expectedPriority": "high"
+  }
+]

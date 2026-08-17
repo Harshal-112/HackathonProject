@@ -66,18 +66,36 @@ Government and administrative offices process large volumes of certificates, app
 - Provide role-aware document workflows, approvals, audit trails and public verification.
 
 The system follows an **upload → preprocessing → OCR → extraction/classification → privacy filtering → AI-assisted processing (optional) → storage/workflow → search/verification** pipeline. Deterministic fallbacks are used where possible so that core document operations do not depend entirely on an external AI service.
+=======
+> **An SDDS hackathon MVP/prototype demonstrating AI-assisted document digitization, department-scoped verification, privacy-aware processing, auditability, and document verification.**
+
+![React](https://img.shields.io/badge/React-18.3-blue?logo=react)
+![Vite](https://img.shields.io/badge/Vite-5.4-purple?logo=vite)
+![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-emerald?logo=supabase)
+![Tesseract.js](https://img.shields.io/badge/OCR-Tesseract.js%20WASM-orange)
+![XAI Engine](https://img.shields.io/badge/AI-Explainable%20AI%20%28XAI%29-violet)
+![Tests](https://img.shields.io/badge/Tests-27%20Passed-brightgreen)
+![License](https://img.shields.io/badge/License-MIT-green)
+
+A prototype document management and verification portal designed for District Collector Offices, Municipal Corporations, Revenue Departments, RTOs, and Gram Panchayats — built for **Smart Kopargaon Hackathon (SKH 2026)** by **Team Mavericks**.
+>>>>>>> bb28bd9 (feat: complete SDDS security, RBAC oversight, XAI, and privacy overhaul)
 
 ---
 
-## 🌟 Key System Capabilities & Architectural Innovations
+## 🌟 Currently Implemented Capabilities
 
 ### 💡 1. Explainable AI (XAI) Engine & Decision Transparency
+<<<<<<< HEAD
 - **Weighted Feature Saliency (100% Total)**: Every classification decision breaks down contributions into 5 standardized, deterministic signals:
+=======
+* **5 Weighted Feature Saliency Signals (100% Total)**: Every classification decision breaks down contributions into standardized, deterministic signals:
+>>>>>>> bb28bd9 (feat: complete SDDS security, RBAC oversight, XAI, and privacy overhaul)
   - **Document Title Match (30%)**: Matches category title patterns (e.g. *"7/12 Extract"*, *"प्राध्यापक भरती"*).
   - **Keyword Density (25%)**: Evaluates domain keyword frequency in OCR text.
   - **Issuing Organization (20%)**: Identifies government office header patterns.
   - **OCR Quality Score (15%)**: Incorporates character recognition confidence.
   - **Date & Urgency Signals (10%)**: Analyzes submission deadlines and emergency keywords.
+<<<<<<< HEAD
 - **Observable Decision Trace**: Step-by-step audit log tracing OCR ingestion, pattern matches, mechanism evaluations, routing decisions, and urgency assignments without hidden LLM claims.
 - **Dual-Engine Mechanism Consensus**: Compares local rule-based classifier against Gemini AI classifier, computing confidence deltas and issuing `Engines Agree` or `Engines Disagree` alerts.
 - **Low-Confidence Handling**: Automatically flags low-confidence results (<60%) or mechanism disagreements for **Manual Review Required**.
@@ -106,17 +124,63 @@ The system follows an **upload → preprocessing → OCR → extraction/classifi
 - **Natural Language Query Matching**: Gemini AI parses queries like *"urgent land files from Revenue Department"* or *"recruitment notices"* and ranks matching documents by semantic relevance.
 - **Contextual OCR Snippet Previews**: Displays matching text snippets under search result cards.
 - **Client-Side Fallback**: Uses Levenshtein fuzzy matching and weighted keyword scoring when offline or in Confidentiality Mode.
+=======
+* **Observable Decision Trace**: Step-by-step audit log tracing OCR ingestion, pattern matches, mechanism evaluations, routing decisions, and urgency assignments.
+* **Classification Mechanism Comparison**: Compares rule-based classifier against Gemini AI output, computing confidence deltas and indicating model agreement or disagreement.
+* **Low-Confidence Handling**: Automatically flags low-confidence results ($<60\%$) or mechanism disagreements for manual review.
+* **Decoupled Department Routing**: Separates document classification from administrative department routing with transparent explanations.
+
+### 🛡️ 2. Department-Scoped Verifier RBAC & Oversight
+* **Strict Role-Based Authority**: Verifiers can approve/reject documents **only** if:
+  - Account status is `active`
+  - Assigned department matches the document's department
+  - Document is assigned specifically to that verifier (`assigned_verifier_id = auth.uid()`)
+  - Document status is `pending` or `re_verification`
+* **Admin Oversight & Monitor Mode**: Admins monitor queues across all departments with view-only access on the Approvals page (no direct operational approve/reject buttons).
+* **Flag for Re-verification**: Admins can flag an approved/rejected document for fresh review (`status = re_verification`) with mandatory reason and reassignment to another verifier, permanently preserving prior approval history.
+* **Realtime Account Suspension**: Admin suspension sets `status = inactive`, immediately terminating active sessions via Supabase Realtime subscriptions.
+* **Controlled Database RPC**: Approvals, rejections, and change requests execute atomically via `process_document_decision()` with row-level locks, preventing unauthorized metadata tampering.
+
+### 🔒 3. Privacy-Focused Local Processing & PII Sanitization
+* **In-Browser Local Processing**: When **`🔒 Local Processing Mode`** is enabled, OCR text extraction and classification execute **entirely inside the browser via WebAssembly (Tesseract.js)**.
+* **Pre-Flight PII Sanitization**: When cloud AI is active, citizen **Aadhaar**, **PAN**, **Phone**, **Email**, **Voter ID**, **Passport**, and **GST** numbers are normalized and redacted before sending text to external endpoints.
+* **Fail-Safe Sanitization**: If sensitive patterns cannot be confidently masked, cloud processing is skipped safely without leaking raw PII.
+* **Secure Server-Side AI**: Gemini API calls are routed through an authenticated Supabase Edge Function (`gemini-process`) with server-side secret management and rate limiting. No API keys are embedded in frontend bundles.
+
+### 🏁 4. Public QR Code Verification Portal (`/verify/:id`)
+* **Login-Free Verification**: Anyone can scan a printed QR code or visit `/verify/:id` to check document authenticity.
+* **Data-Minimization Enforced**: Returns **only non-sensitive public fields** (`documentNumber`, `status`, `department`, `category`, `createdAt`, `updatedAt`, `isAuthentic`), shielding internal verifier names, citizen PII, and storage URLs.
+* **Downloadable SVG QR**: One-click vector QR code export for official physical printouts.
+
+### 📄 5. Multi-Language OCR & Automated Metadata Routing
+* **Languages Supported**: **English**, **Marathi (Devanagari script)**, and **Hindi**.
+* **Pre-Processing Pipeline**: 3× image upscaling, ±8° deskewing, Sauvola adaptive binarization, and median noise reduction filter.
+* **Server-Side Document Numbering**: Transactionally generates unique, collision-free identifiers formatted as `SDDS-<DEPT>-YYYY-XXXXXX` via PostgreSQL sequence triggers.
+>>>>>>> bb28bd9 (feat: complete SDDS security, RBAC oversight, XAI, and privacy overhaul)
 
 ---
 
-## 👥 Role-Based Access Control (RBAC)
+## 📊 Classification Benchmark & Evaluation
 
-| Feature / Page | Admin | Officer | Verifier | Citizen |
+The rule-based classifier and department routing logic were evaluated against a ground-truth dataset (`tests/data/classification-benchmark.json`) of diverse Maharashtra government document types:
+
+| Metric | Benchmark Result | Target SLA |
+|---|:---:|:---:|
+| **Type / Category Classification Accuracy** | **80.0%** (8/10) | $\ge 75\%$ |
+| **Department Routing Accuracy** | **90.0%** (9/10) | $\ge 80\%$ |
+| **Automated Unit Tests** | **27 / 27 Passed** | $100\%$ |
+
+---
+
+## 👥 Role Matrix
+
+| Capability | Admin | Officer | Verifier | Citizen |
 |---|:---:|:---:|:---:|:---:|
-| **Dashboard** (`/dashboard`) | ✅ | ✅ | ✅ | ✅ |
+| **Dashboard** (`/dashboard`) | View All | View All | View All | View Own |
 | **Upload Documents** (`/upload`) | ✅ | ✅ | ❌ | ✅ |
-| **Document Directory** (`/documents`) | ✅ | ✅ | ✅ | ✅ |
+| **Document Directory** (`/documents`) | View All | View All | Assigned Dept | Own Uploads |
 | **Public QR Verification** (`/verify/:id`) | ✅ | ✅ | ✅ | ✅ |
+<<<<<<< HEAD
 | **Explainable AI (XAI) Panel** | ✅ | ✅ | ✅ | ✅ |
 | **Floating AI Assistant** | ✅ | ✅ | ✅ | ✅ |
 | **Approvals Queue** (`/approvals`) | ✅ | ❌ | ✅ | ❌ |
@@ -124,6 +188,22 @@ The system follows an **upload → preprocessing → OCR → extraction/classifi
 | **Analytics Reports** (`/reports`) | ✅ | ✅ | ✅ | ❌ |
 | **User Management** (`/users`) | ✅ | ❌ | ❌ | ❌ |
 | **System Settings** (`/settings`) | ✅ | ❌ | ❌ | ❌ |
+=======
+| **Approvals Queue** (`/approvals`) | Monitor Only | View | Act on Assigned | ❌ |
+| **Flag for Re-verification** | ✅ | ❌ | ❌ | ❌ |
+| **Suspend Verifier** | ✅ | ❌ | ❌ | ❌ |
+| **Audit Trail** (`/audit`) | View All | View | View | ❌ |
+| **User Management** (`/users`) | Full Admin | ❌ | ❌ | ❌ |
+
+---
+
+## 🔮 Future / Planned Features
+
+* [ ] Digilocker API integration for automated citizen document pulling.
+* [ ] Hardware Security Module (HSM) / eSign PKI digital signatures.
+* [ ] Multi-tenant isolation for separate district administrations.
+* [ ] Automated biometric / face matching for identity verification.
+>>>>>>> bb28bd9 (feat: complete SDDS security, RBAC oversight, XAI, and privacy overhaul)
 
 ---
 
@@ -251,6 +331,7 @@ Supabase Database
 
 ```
 smartDocumentation/
+<<<<<<< HEAD
 ├── netlify.toml               # Netlify SPA routing & COOP/COEP WASM headers
 └── project/                   # Frontend Web Application
     ├── public/
@@ -293,6 +374,38 @@ smartDocumentation/
     │       ├── summaryService.js     # AI summaries
     │       └── workflowAutomation.js # Auto-routing decision engine
     └── package.json
+=======
+├── supabase/
+│   ├── functions/
+│   │   └── gemini-process/         # Secure authenticated Edge Function for Gemini API
+│   └── migrations/
+│       ├── 001_initial_schema.sql  # Schema, sequence, doc numbering trigger, RLS
+│       ├── 002_rbac_verifier_assignment.sql # Verifier policies & Realtime pub
+│       ├── 003_document_decision_rpc.sql    # Atomic decision RPC function
+│       └── 004_audit_triggers.sql           # Tamper-resistant server-side audit triggers
+├── project/                        # Frontend Web Application
+│   ├── src/
+│   │   ├── components/             # Layout, UI components, XAI & AI panels
+│   │   ├── lib/
+│   │   │   ├── api.js              # Canonical API module & Supabase client wrapper
+│   │   │   ├── auth-context.jsx    # Supabase Auth state & Realtime suspension watch
+│   │   │   └── supabase.js         # Supabase client initialization
+│   │   ├── pages/                  # Upload, Approvals, Users, Document Details, Verify
+│   │   └── services/
+│   │       ├── aiService.js        # Secure AI proxy & semantic search
+│   │       ├── piiService.js       # OCR-tolerant PII detection & fail-soft masking
+│   │       ├── xaiEngine.js        # Saliency analysis, decision trace & consensus
+│   │       ├── documentClassifier.js # Bilingual rule-based classifier
+│   │       └── workflowAutomation.js # Routing & overdue SLA calculation
+│   └── tests/                      # Automated Vitest test suites (27 unit tests)
+│       ├── pii.test.js
+│       ├── xai.test.js
+│       ├── rbac-auth.test.js
+│       ├── document-workflow.test.js
+│       ├── security-check.test.js
+│       └── classification-benchmark.test.js
+└── package.json
+>>>>>>> bb28bd9 (feat: complete SDDS security, RBAC oversight, XAI, and privacy overhaul)
 ```
 
 ---
@@ -305,33 +418,49 @@ smartDocumentation/
 
 ### 2. Installation
 ```bash
+<<<<<<< HEAD
 git clone https://github.com/Harshal-112/HackathonProject.git
 cd HackathonProject/project
+=======
+cd project
+>>>>>>> bb28bd9 (feat: complete SDDS security, RBAC oversight, XAI, and privacy overhaul)
 npm install
 ```
 
 ### 3. Environment Configuration
 Create a `.env` file in the `project/` directory:
 ```env
-VITE_SUPABASE_URL=https://your-supabase-project.supabase.co
+VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
-VITE_GEMINI_API_KEY=your-google-gemini-api-key
 ```
 
-### 4. Running Locally
+### 4. Running Automated Tests
+```bash
+# Run all unit tests & benchmark evaluations
+npm test
+
+# Run tests with coverage
+npm run test:coverage
+```
+
+### 5. Running the Application Locally
 ```bash
 npm run dev
 ```
 Open `http://localhost:5173` in your browser.
 
-### 5. Production Build
+### 6. Production Build
 ```bash
 npm run build
+<<<<<<< HEAD
 npm run preview
+=======
+>>>>>>> bb28bd9 (feat: complete SDDS security, RBAC oversight, XAI, and privacy overhaul)
 ```
 
 ---
 
+<<<<<<< HEAD
 ## ✅ Testing & Validation
 
 | ID | Test Case | Expected Result | Status |
@@ -416,6 +545,7 @@ npm run preview
 | Nikhil Jahagirdar | QA & Documentation |
 
 ---
+
 ## 📝 License
 
 Distributed under the **MIT License**. Created for the **Smart Kopargaon Hackathon (SKH 2026)** by **Team Mavericks**.

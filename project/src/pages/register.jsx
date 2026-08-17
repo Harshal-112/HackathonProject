@@ -185,9 +185,10 @@ export default function RegisterPage() {
                   className="mt-1.5"
                 />
                 {form.role === 'verifier' && (
-                  <p className="text-xs text-amber-600 mt-1.5">
-                    Verifier accounts need admin approval before you can log in.
-                  </p>
+                  <div className="mt-1.5 rounded-md bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 p-2.5 text-xs text-amber-800 dark:text-amber-300 space-y-0.5">
+                    <p className="font-semibold">Verifier Account — Department Required</p>
+                    <p>Your selected department will be reviewed by an administrator. Once approved, only an administrator can change your department assignment.</p>
+                  </div>
                 )}
               </div>
               <div>
