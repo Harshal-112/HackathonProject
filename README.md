@@ -8,6 +8,7 @@
 [![Tesseract.js](https://img.shields.io/badge/OCR-Tesseract.js%20WASM-FF6F00?style=for-the-badge)](https://tesseract.projectnaptha.com)
 [![XAI Engine](https://img.shields.io/badge/AI-Explainable%20AI%20(XAI)-8B5CF6?style=for-the-badge)](#-explainable-ai-xai--privacy-methodology)
 [![Deployment](https://img.shields.io/badge/Deploy-Netlify-00C7B7?style=for-the-badge&logo=netlify&logoColor=white)](https://smartdocumentatiion.netlify.app/)
+[![Tests](https://img.shields.io/badge/Tests-Vitest-6E9F18?style=for-the-badge&logo=vitest&logoColor=white)](#testing--validation)
 [![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](./LICENSE)
 
 <p align="center">
@@ -33,7 +34,7 @@
 9. [Technology Stack](#technology-stack)
 10. [Repository Structure](#-repository-structure)
 11. [Getting Started & Setup Guide](#-getting-started--setup-guide)
-12. [Testing & Validation](#-testing--validation)
+12. [Testing & Validation](#testing--validation)
 13. [Evaluation Metrics](#-evaluation-metrics)
 14. [Government Compliance and Security Features](#government-compliance-and-security-features)
 15. [Technical Limitations](#technical-limitations)
@@ -66,44 +67,31 @@ Government and administrative offices process large volumes of certificates, app
 - Provide role-aware document workflows, approvals, audit trails and public verification.
 
 The system follows an **upload → preprocessing → OCR → extraction/classification → privacy filtering → AI-assisted processing (optional) → storage/workflow → search/verification** pipeline. Deterministic fallbacks are used where possible so that core document operations do not depend entirely on an external AI service.
-=======
-> **An SDDS hackathon MVP/prototype demonstrating AI-assisted document digitization, department-scoped verification, privacy-aware processing, auditability, and document verification.**
-
-![React](https://img.shields.io/badge/React-18.3-blue?logo=react)
-![Vite](https://img.shields.io/badge/Vite-5.4-purple?logo=vite)
-![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-emerald?logo=supabase)
-![Tesseract.js](https://img.shields.io/badge/OCR-Tesseract.js%20WASM-orange)
-![XAI Engine](https://img.shields.io/badge/AI-Explainable%20AI%20%28XAI%29-violet)
-![Tests](https://img.shields.io/badge/Tests-27%20Passed-brightgreen)
-![License](https://img.shields.io/badge/License-MIT-green)
-
-A prototype document management and verification portal designed for District Collector Offices, Municipal Corporations, Revenue Departments, RTOs, and Gram Panchayats — built for **Smart Kopargaon Hackathon (SKH 2026)** by **Team Mavericks**.
->>>>>>> bb28bd9 (feat: complete SDDS security, RBAC oversight, XAI, and privacy overhaul)
 
 ---
 
-## 🌟 Currently Implemented Capabilities
+## 🌟 Key System Capabilities & Architectural Innovations
 
 ### 💡 1. Explainable AI (XAI) Engine & Decision Transparency
-<<<<<<< HEAD
 - **Weighted Feature Saliency (100% Total)**: Every classification decision breaks down contributions into 5 standardized, deterministic signals:
-=======
-* **5 Weighted Feature Saliency Signals (100% Total)**: Every classification decision breaks down contributions into standardized, deterministic signals:
->>>>>>> bb28bd9 (feat: complete SDDS security, RBAC oversight, XAI, and privacy overhaul)
   - **Document Title Match (30%)**: Matches category title patterns (e.g. *"7/12 Extract"*, *"प्राध्यापक भरती"*).
   - **Keyword Density (25%)**: Evaluates domain keyword frequency in OCR text.
   - **Issuing Organization (20%)**: Identifies government office header patterns.
   - **OCR Quality Score (15%)**: Incorporates character recognition confidence.
   - **Date & Urgency Signals (10%)**: Analyzes submission deadlines and emergency keywords.
-<<<<<<< HEAD
 - **Observable Decision Trace**: Step-by-step audit log tracing OCR ingestion, pattern matches, mechanism evaluations, routing decisions, and urgency assignments without hidden LLM claims.
 - **Dual-Engine Mechanism Consensus**: Compares local rule-based classifier against Gemini AI classifier, computing confidence deltas and issuing `Engines Agree` or `Engines Disagree` alerts.
 - **Low-Confidence Handling**: Automatically flags low-confidence results (<60%) or mechanism disagreements for **Manual Review Required**.
 - **Decoupled Department Routing**: Separates document classification from administrative department routing with transparent, rule-specific explanations.
+- The 5 feature weights are enforced to sum to exactly 100% by an automated test (`tests/xai.test.js`), so the "why this classification" explanation can never silently drift out of balance.
 
-### 🔒 2. Confidentiality Mode & Client-Side PII Scrubbing
-- **100% In-Browser Local Processing**: When **`🔒 Confidentiality Mode`** is toggled ON in the top navigation bar, OCR text extraction, document classification, indexing, and metadata extraction execute **entirely inside the browser via WebAssembly (Tesseract.js)**. Zero data leaves the local device.
-- **Automated PII Masker**: When running in Normal AI Mode, citizen **Aadhaar**, **PAN**, **Phone**, **Email**, **Voter ID**, **Passport**, and **GST** numbers are automatically scrubbed on the client side before sending text to external AI endpoints (DPDP Act 2023 compliant).
+### 🔒 2. Secure AI Gateway & Defense-in-Depth PII Protection
+- **Server-Side-Only AI Calls**: All Gemini requests are routed through an authenticated **Supabase Edge Function** (`supabase/functions/gemini-process`). The API key lives only in server environment secrets — it is never bundled into the frontend and never visible in browser DevTools.
+- **JWT-Authenticated & Rate-Limited**: The Edge Function verifies the caller's Supabase session token and enforces a 15-requests-per-minute limit per user before contacting Gemini.
+- **Two-Layer PII Sanitization**: Text is masked client-side before leaving the browser, then **re-validated server-side** inside the Edge Function — if sanitization cannot be guaranteed, the request is rejected rather than silently sent (`sanitizeForAI()` fail-closed behavior).
+- **Detected & Masked Identifiers**: Aadhaar, PAN, GSTIN, Indian mobile numbers, email addresses, Voter ID (EPIC), and Passport numbers — tolerant of OCR spacing/punctuation noise (`src/services/piiService.js`).
+- **Confidentiality Mode**: When toggled ON, all cloud AI calls are disabled entirely and processing stays 100% in-browser via WebAssembly OCR.
+- **Self-Guarding Regression Test**: `tests/security-check.test.js` scans the entire frontend source tree on every test run and fails the build if a Google API key pattern or the old `VITE_GEMINI_API_KEY` reference is ever reintroduced.
 
 ### 🤖 3. Global Floating AI Chatbot Assistant
 - **Accessible Across Every Page**: A floating chat widget available in the bottom-right corner of all tabs (`Dashboard`, `Upload`, `Documents`, `Settings`, etc.).
@@ -112,7 +100,7 @@ A prototype document management and verification portal designed for District Co
 
 ### 🏁 4. Public QR Code Verification Portal (`/verify/:id`)
 - **Login-Free Verification**: Anyone can scan a printed QR code or visit `/verify/:id` to check document authenticity.
-- **Zero PII Exposure**: Uses `getPublicDocumentVerification()` to return **only non-sensitive public fields** (`title`, `status`, `documentNumber`, `department`, `category`, `createdAt`, `approvals`), shielding raw OCR text, internal file paths, and citizen PII.
+- **Minimized Field Exposure**: `getPublicDocumentVerification()` returns only non-sensitive fields (`title`, `status`, `documentNumber`, `department`, `category`, `createdAt`, `updatedAt`), shielding raw OCR text, extracted metadata, and internal workflow data from the public response shape.
 - **Downloadable SVG QR**: One-click vector QR code export for official physical printouts.
 
 ### 📄 5. Multi-Language OCR & Automatic AI Metadata Extraction
@@ -124,86 +112,31 @@ A prototype document management and verification portal designed for District Co
 - **Natural Language Query Matching**: Gemini AI parses queries like *"urgent land files from Revenue Department"* or *"recruitment notices"* and ranks matching documents by semantic relevance.
 - **Contextual OCR Snippet Previews**: Displays matching text snippets under search result cards.
 - **Client-Side Fallback**: Uses Levenshtein fuzzy matching and weighted keyword scoring when offline or in Confidentiality Mode.
-=======
-* **Observable Decision Trace**: Step-by-step audit log tracing OCR ingestion, pattern matches, mechanism evaluations, routing decisions, and urgency assignments.
-* **Classification Mechanism Comparison**: Compares rule-based classifier against Gemini AI output, computing confidence deltas and indicating model agreement or disagreement.
-* **Low-Confidence Handling**: Automatically flags low-confidence results ($<60\%$) or mechanism disagreements for manual review.
-* **Decoupled Department Routing**: Separates document classification from administrative department routing with transparent explanations.
 
-### 🛡️ 2. Department-Scoped Verifier RBAC & Oversight
-* **Strict Role-Based Authority**: Verifiers can approve/reject documents **only** if:
-  - Account status is `active`
-  - Assigned department matches the document's department
-  - Document is assigned specifically to that verifier (`assigned_verifier_id = auth.uid()`)
-  - Document status is `pending` or `re_verification`
-* **Admin Oversight & Monitor Mode**: Admins monitor queues across all departments with view-only access on the Approvals page (no direct operational approve/reject buttons).
-* **Flag for Re-verification**: Admins can flag an approved/rejected document for fresh review (`status = re_verification`) with mandatory reason and reassignment to another verifier, permanently preserving prior approval history.
-* **Realtime Account Suspension**: Admin suspension sets `status = inactive`, immediately terminating active sessions via Supabase Realtime subscriptions.
-* **Controlled Database RPC**: Approvals, rejections, and change requests execute atomically via `process_document_decision()` with row-level locks, preventing unauthorized metadata tampering.
-
-### 🔒 3. Privacy-Focused Local Processing & PII Sanitization
-* **In-Browser Local Processing**: When **`🔒 Local Processing Mode`** is enabled, OCR text extraction and classification execute **entirely inside the browser via WebAssembly (Tesseract.js)**.
-* **Pre-Flight PII Sanitization**: When cloud AI is active, citizen **Aadhaar**, **PAN**, **Phone**, **Email**, **Voter ID**, **Passport**, and **GST** numbers are normalized and redacted before sending text to external endpoints.
-* **Fail-Safe Sanitization**: If sensitive patterns cannot be confidently masked, cloud processing is skipped safely without leaking raw PII.
-* **Secure Server-Side AI**: Gemini API calls are routed through an authenticated Supabase Edge Function (`gemini-process`) with server-side secret management and rate limiting. No API keys are embedded in frontend bundles.
-
-### 🏁 4. Public QR Code Verification Portal (`/verify/:id`)
-* **Login-Free Verification**: Anyone can scan a printed QR code or visit `/verify/:id` to check document authenticity.
-* **Data-Minimization Enforced**: Returns **only non-sensitive public fields** (`documentNumber`, `status`, `department`, `category`, `createdAt`, `updatedAt`, `isAuthentic`), shielding internal verifier names, citizen PII, and storage URLs.
-* **Downloadable SVG QR**: One-click vector QR code export for official physical printouts.
-
-### 📄 5. Multi-Language OCR & Automated Metadata Routing
-* **Languages Supported**: **English**, **Marathi (Devanagari script)**, and **Hindi**.
-* **Pre-Processing Pipeline**: 3× image upscaling, ±8° deskewing, Sauvola adaptive binarization, and median noise reduction filter.
-* **Server-Side Document Numbering**: Transactionally generates unique, collision-free identifiers formatted as `SDDS-<DEPT>-YYYY-XXXXXX` via PostgreSQL sequence triggers.
->>>>>>> bb28bd9 (feat: complete SDDS security, RBAC oversight, XAI, and privacy overhaul)
+### 🗂️ 7. Server-Enforced Verification Workflow
+- **Atomic Decision RPC**: Approving, rejecting, or requesting changes on a document is never a direct table update from the client — it calls `process_document_decision()`, a `SECURITY DEFINER` Postgres function that independently re-checks the caller's role, active status, department match, and current assignment before making any change.
+- **Row-Locked Updates**: The document row is locked (`FOR UPDATE`) during the decision to prevent race conditions from two verifiers acting on the same document simultaneously.
+- **Immutable Audit Trail**: Every decision is written to `audit_logs` inside the same atomic transaction — there is no database policy allowing audit rows to be updated or deleted.
 
 ---
 
-## 📊 Classification Benchmark & Evaluation
+## 👥 Role-Based Access Control (RBAC)
 
-The rule-based classifier and department routing logic were evaluated against a ground-truth dataset (`tests/data/classification-benchmark.json`) of diverse Maharashtra government document types:
-
-| Metric | Benchmark Result | Target SLA |
-|---|:---:|:---:|
-| **Type / Category Classification Accuracy** | **80.0%** (8/10) | $\ge 75\%$ |
-| **Department Routing Accuracy** | **90.0%** (9/10) | $\ge 80\%$ |
-| **Automated Unit Tests** | **27 / 27 Passed** | $100\%$ |
-
----
-
-## 👥 Role Matrix
-
-| Capability | Admin | Officer | Verifier | Citizen |
+| Feature / Page | Admin | Officer | Verifier | Citizen |
 |---|:---:|:---:|:---:|:---:|
-| **Dashboard** (`/dashboard`) | View All | View All | View All | View Own |
+| **Dashboard** (`/dashboard`) | ✅ | ✅ | ✅ | ✅ |
 | **Upload Documents** (`/upload`) | ✅ | ✅ | ❌ | ✅ |
-| **Document Directory** (`/documents`) | View All | View All | Assigned Dept | Own Uploads |
+| **Document Directory** (`/documents`) | ✅ | ✅ | ✅ | ✅ |
 | **Public QR Verification** (`/verify/:id`) | ✅ | ✅ | ✅ | ✅ |
-<<<<<<< HEAD
 | **Explainable AI (XAI) Panel** | ✅ | ✅ | ✅ | ✅ |
 | **Floating AI Assistant** | ✅ | ✅ | ✅ | ✅ |
-| **Approvals Queue** (`/approvals`) | ✅ | ❌ | ✅ | ❌ |
+| **Approvals Queue** (`/approvals`) | ✅ (monitor only) | ✅ | ✅ | ❌ |
 | **Audit Trail** (`/audit`) | ✅ | ✅ | ✅ | ❌ |
 | **Analytics Reports** (`/reports`) | ✅ | ✅ | ✅ | ❌ |
 | **User Management** (`/users`) | ✅ | ❌ | ❌ | ❌ |
 | **System Settings** (`/settings`) | ✅ | ❌ | ❌ | ❌ |
-=======
-| **Approvals Queue** (`/approvals`) | Monitor Only | View | Act on Assigned | ❌ |
-| **Flag for Re-verification** | ✅ | ❌ | ❌ | ❌ |
-| **Suspend Verifier** | ✅ | ❌ | ❌ | ❌ |
-| **Audit Trail** (`/audit`) | View All | View | View | ❌ |
-| **User Management** (`/users`) | Full Admin | ❌ | ❌ | ❌ |
 
----
-
-## 🔮 Future / Planned Features
-
-* [ ] Digilocker API integration for automated citizen document pulling.
-* [ ] Hardware Security Module (HSM) / eSign PKI digital signatures.
-* [ ] Multi-tenant isolation for separate district administrations.
-* [ ] Automated biometric / face matching for identity verification.
->>>>>>> bb28bd9 (feat: complete SDDS security, RBAC oversight, XAI, and privacy overhaul)
+> Database-level RLS enforces a stricter rule than the UI table above shows: **Verifiers only ever see documents assigned to them within their own department**, and **Citizens only ever see their own uploads** — Admins/Officers see the full set. Admins are explicitly blocked from approving or rejecting documents themselves (enforced inside `process_document_decision()`), keeping oversight and execution separated.
 
 ---
 
@@ -230,10 +163,11 @@ graph TD
 
     subgraph Backend["BACKEND SERVICES (Supabase)"]
         C1[Auth Service]
-        C2[PostgreSQL Database]
-        C3[Storage]
+        C2[PostgreSQL + RLS]
+        C3[process_document_decision RPC]
         C4[Realtime Updates]
-        C5[Audit Log]
+        C5[Audit Triggers]
+        C6[Edge Function: gemini-process]
     end
 
     subgraph External["EXTERNAL SERVICES"]
@@ -243,12 +177,12 @@ graph TD
 
     UserLayer --> AppLayer
     AppLayer --> Backend
-    AppLayer -.optional AI mode.-> D1
+    C6 -.server-side only.-> D1
     B3 --> D2
-    Backend --> DataLayer[(Users · Documents · Metadata · Approvals · Audit Logs · QR Codes)]
+    Backend --> DataLayer[(profiles · documents · audit_logs · notifications · settings)]
 ```
 
-**Deployment**: Web SPA on **Netlify**, with `netlify.toml` configuring SPA routing and `Cross-Origin-Opener-Policy` / `Cross-Origin-Embedder-Policy` headers required for multithreaded WASM OCR.
+**Deployment**: Frontend SPA on **Netlify**, with `netlify.toml` configuring SPA routing and `Cross-Origin-Opener-Policy` / `Cross-Origin-Embedder-Policy` headers required for multithreaded WASM OCR. AI processing runs on a **Supabase Edge Function** (Deno runtime), fully separate from the static frontend bundle.
 
 ---
 
@@ -261,7 +195,7 @@ flowchart LR
     C --> D{Confidence\nCheck}
     D -->|Low| E[Reprocess: inverted image /\nalternative mode]
     E --> C
-    D -->|High| F["4. Text Post-Processing\nCleaning\nPII Detection & Masking\nKey Info Extraction"]
+    D -->|High| F["4. Text Post-Processing\nCleaning · Spell/Grammar\nPII Detection & Masking\nKey Info Extraction"]
     F --> G["5. Downstream Utilization\nMetadata Gen · Classification\nAI Analysis · Smart Search Index\nWorkflow Routing · Storage"]
 ```
 
@@ -274,31 +208,39 @@ flowchart LR
 
 ## 🧠 Explainable AI (XAI) + Privacy Methodology
 
-The system uses an Explainable AI (XAI) layer to make document classification transparent by showing feature contributions from the document title, keywords, organization, OCR confidence, and date signals. A Decision Trace records key processing steps, while rule-based and AI-assisted classification results are compared when available. Privacy is supported through PII detection and masking, which can mask identifiers such as Aadhaar numbers, PAN numbers, GSTINs, and mobile numbers before OCR-derived content is sent to external AI services. AI processing remains optional, with browser-side or local processing preferred for confidential documents where supported.
+The system uses an Explainable AI (XAI) layer to make document classification transparent by showing feature contributions from the document title, keywords, organization, OCR confidence, and date signals. A Decision Trace records key processing steps, while rule-based and AI-assisted classification results are compared when available. Privacy is supported through PII detection and masking, which can mask identifiers such as Aadhaar numbers, PAN numbers, GSTINs, and mobile numbers before OCR-derived content is sent to external AI services. AI processing remains optional, with browser-side or local processing preferred for confidential documents where supported, and is now further validated server-side before any external call is made.
 
 ---
 
 ## Data Model
 
-*Supabase / PostgreSQL*
+*Supabase / PostgreSQL — enforced with Row Level Security on every table*
 
 ```
-Supabase Database
-├── users            — Accounts, roles (Admin / Officer / Verifier / Citizen)
-├── documents         — Uploaded document records & status
-├── metadata          — Extracted title, department, category, priority, dates
-├── approvals          — Approve / Reject / Request-Changes workflow state
-├── audit_logs        — Full activity trail (who, what, when, IP, role)
-└── qr_codes          — Generated QR payloads for public verification
+Supabase Database (public schema)
+├── profiles       — 1:1 with auth.users · role (admin/officer/verifier/citizen), department, status
+├── documents      — Core record: file info, status, OCR text, jsonb metadata, jsonb approvals history,
+│                    jsonb versions, assigned_verifier_id, auto-generated document_number
+├── audit_logs     — Immutable activity trail (no UPDATE/DELETE policy exists — insert-only)
+├── notifications  — Per-user alerts (assignment, approval, rejection, upload)
+└── settings       — Singleton system config (AI thresholds, OCR languages, PII toggles, retention)
 ```
+
+**Server-side logic layer (not exposed to the client as raw table access):**
+
+| Function | Type | Purpose |
+|---|---|---|
+| `generate_document_number()` | Trigger function | Auto-generates department-coded reference numbers (e.g. `SDDS-REV-2026-000123`) |
+| `process_document_decision()` | `SECURITY DEFINER` RPC | The only path to approve/reject/request-changes — re-validates role, department, assignment, and document state before writing |
+| `trg_document_audit()` / `trg_profile_audit()` | Triggers | Automatically write immutable audit entries on document and profile changes |
 
 | Subsystem | Components | Key Responsibility |
 |---|---|---|
 | Authentication | Login, registration, recovery, session | Identity & protected application access |
 | Document Processing | Upload, OCR, parser, metadata, classifier | Convert files into structured records |
-| AI Services | AI service, summary service, privacy filtering | Optional AI enhancement & summaries |
+| AI Services | Edge Function proxy, summary service, privacy filtering | Optional AI enhancement & summaries, server-enforced |
 | Discovery | Smart search, keyword/entity logic | Search, filtering, ranking, snippets |
-| Workflow | Routing, approvals, status changes | Move documents through configured stages |
+| Workflow | RPC-based routing, approvals, status changes | Move documents through configured stages atomically |
 | Administration | Users, reports, settings, audit | Administrative control & traceability |
 | Verification | QR generation, public verification | Expose limited verification information |
 
@@ -311,18 +253,20 @@ Supabase Database
 | Frontend | React 18.3 + Vite 5.4 | Single-page web application & routing |
 | UI | Tailwind CSS | Responsive interface & component styling |
 | Authentication | Supabase Auth | User authentication & session management |
-| Database / Backend | Supabase (PostgreSQL) | Persistent application data & backend services |
+| Database / Backend | Supabase (PostgreSQL + RLS) | Persistent application data & backend services |
+| Serverless AI Gateway | Supabase Edge Functions (Deno) | JWT-authenticated, rate-limited Gemini proxy — key never reaches the browser |
 | OCR | Tesseract.js / WebAssembly | Multilingual document text extraction (eng + hin + mar) |
 | AI (optional) | Google Gemini API | AI-assisted metadata, summaries & analysis |
 | PDF/Image | `pdfjs-dist` | Browser-side PDF rendering & OCR preparation |
+| Testing | Vitest | Unit, workflow, RBAC, PII, and static security regression tests |
 | Deployment | Netlify | Web prototype deployment (SPA routing, COOP/COEP headers) |
 | Verification | QR generation + public verification route | Document verification workflow |
 
 **System Requirements**
 - Development: Node.js 18+ and npm 9+.
 - Runtime: modern Chromium / Firefox / Safari-class browser with JavaScript enabled.
-- Backend: configured Supabase project for authentication and data persistence.
-- AI mode: Gemini API key when AI-assisted features are enabled.
+- Backend: configured Supabase project for authentication, data persistence, and Edge Function deployment.
+- AI mode: Gemini API key configured as a **Supabase Edge Function secret** (server-side only — never in frontend `.env`).
 - Document processing: sufficient client CPU/RAM for browser-side OCR, especially for multi-page PDFs.
 
 ---
@@ -331,81 +275,69 @@ Supabase Database
 
 ```
 smartDocumentation/
-<<<<<<< HEAD
-├── netlify.toml               # Netlify SPA routing & COOP/COEP WASM headers
-└── project/                   # Frontend Web Application
+├── netlify.toml                    # Netlify SPA routing & COOP/COEP WASM headers
+├── supabase/
+│   ├── migrations/
+│   │   ├── 001_initial_schema.sql          # Tables, sequences, document numbering, RLS enablement
+│   │   ├── 002_rbac_verifier_assignment.sql # Per-role RLS policies, department-scoped access
+│   │   ├── 003_document_decision_rpc.sql    # Atomic SECURITY DEFINER approval/reject RPC
+│   │   └── 004_audit_triggers.sql           # Immutable audit trail triggers & policies
+│   └── functions/
+│       └── gemini-process/index.ts # JWT-authenticated, rate-limited Gemini Edge Function proxy
+└── project/                        # Frontend Web Application
     ├── public/
-    │   ├── tessdata/           # eng / hin / mar Tesseract language data
-    │   ├── tesseract-core/     # Tesseract WASM runtime
-    │   └── pdfjs/              # PDF.js cmaps, fonts & WASM
+    │   ├── tessdata/                # eng / hin / mar Tesseract language data
+    │   ├── tesseract-core/          # Tesseract WASM runtime
+    │   └── pdfjs/                   # PDF.js cmaps, fonts & WASM
+    ├── tests/                       # Vitest automated test suite
+    │   ├── classification-benchmark.test.js
+    │   ├── document-workflow.test.js
+    │   ├── pii.test.js
+    │   ├── rbac-auth.test.js
+    │   ├── security-check.test.js   # Fails the build if a leaked API key pattern is found
+    │   └── xai.test.js
     ├── src/
     │   ├── components/
-    │   │   ├── layout/         # Sidebar, Navbar, Layout, FloatingChatbot, ErrorBoundary
-    │   │   ├── shared/         # PageHeader, Badges, XAIPanel, AIInsightsPanel
-    │   │   └── ui/              # Button, Card, Input, Modal, Badge, Skeleton, Tabs
+    │   │   ├── layout/               # Sidebar, Navbar, Layout, FloatingChatbot, ErrorBoundary
+    │   │   ├── shared/                # PageHeader, Badges, XAIPanel, AIInsightsPanel
+    │   │   └── ui/                    # Button, Card, Input, Modal, Badge, Skeleton, Tabs
     │   ├── hooks/
-    │   │   └── useOCR.js        # OCR lifecycle hook
+    │   │   └── useOCR.js              # OCR lifecycle hook
     │   ├── lib/
-    │   │   ├── auth-context.jsx     # Supabase Auth state & profile reconciliation
-    │   │   ├── privacy-context.jsx  # Confidentiality Mode state
-    │   │   ├── theme-context.jsx    # Dark / Light theme provider
-    │   │   ├── toast-context.jsx    # Toast notification provider
-    │   │   ├── supabase.js          # Supabase client
-    │   │   └── mock-data.js         # Departments, categories & demo settings
+    │   │   ├── api.js                 # Canonical Supabase-backed API client
+    │   │   ├── auth-context.jsx       # Supabase Auth state & profile reconciliation
+    │   │   ├── privacy-context.jsx    # Confidentiality Mode state
+    │   │   ├── theme-context.jsx      # Dark / Light theme provider
+    │   │   ├── toast-context.jsx      # Toast notification provider
+    │   │   ├── supabase.js            # Supabase client
+    │   │   └── mock-data.js           # Departments, categories & UI constants
     │   ├── pages/
-    │   │   ├── upload.jsx            # Drag & drop OCR upload with instant auto-fill & XAI preview
-    │   │   ├── document-details.jsx  # OCR text, AI Insights Panel, XAI Panel
-    │   │   ├── verify.jsx            # Public QR verification portal
-    │   │   ├── search.jsx            # Full-width AI semantic search
-    │   │   ├── approvals.jsx         # Approve / Reject / Request Changes queue
-    │   │   ├── audit-trail.jsx       # Complete activity log
+    │   │   ├── upload.jsx              # Drag & drop OCR upload with instant auto-fill & XAI preview
+    │   │   ├── document-list.jsx       # Document directory / management
+    │   │   ├── document-details.jsx    # OCR text, AI Insights Panel, XAI Panel
+    │   │   ├── verify.jsx              # Public QR verification portal
+    │   │   ├── search.jsx              # Full-width AI semantic search
+    │   │   ├── approvals.jsx           # Approve / Reject / Request Changes queue
+    │   │   ├── audit-trail.jsx         # Complete activity log
+    │   │   ├── notifications.jsx / profile.jsx
     │   │   ├── dashboard.jsx / reports.jsx / users.jsx / settings.jsx
     │   │   └── login.jsx / register.jsx / forgot-password.jsx / reset-password.jsx
     │   └── services/
     │       ├── xaiEngine.js          # XAI saliency, decision trace, consensus engine
+    │       ├── piiService.js         # PII detection, masking & AI pre-flight sanitization
     │       ├── documentClassifier.js # Rule-based document classification
     │       ├── documentParser.js     # Structured field extraction
     │       ├── ocrService.js         # Tesseract.js WASM multilingual OCR pipeline
     │       ├── pdfService.js         # PDF page extraction (pdfjs-dist)
-    │       ├── aiService.js          # Gemini API calls, PII masker, AI search
+    │       ├── imageService.js       # Image preprocessing (deskew, binarize, denoise)
+    │       ├── aiService.js          # Edge Function client, AI search, summaries
     │       ├── keywordService.js     # Keyword/entity extraction
     │       ├── metadataService.js    # Metadata generation
     │       ├── smartSearch.js        # Ranking, filtering, fuzzy matching
     │       ├── summaryService.js     # AI summaries
     │       └── workflowAutomation.js # Auto-routing decision engine
+    ├── utils/fileUtils.js
     └── package.json
-=======
-├── supabase/
-│   ├── functions/
-│   │   └── gemini-process/         # Secure authenticated Edge Function for Gemini API
-│   └── migrations/
-│       ├── 001_initial_schema.sql  # Schema, sequence, doc numbering trigger, RLS
-│       ├── 002_rbac_verifier_assignment.sql # Verifier policies & Realtime pub
-│       ├── 003_document_decision_rpc.sql    # Atomic decision RPC function
-│       └── 004_audit_triggers.sql           # Tamper-resistant server-side audit triggers
-├── project/                        # Frontend Web Application
-│   ├── src/
-│   │   ├── components/             # Layout, UI components, XAI & AI panels
-│   │   ├── lib/
-│   │   │   ├── api.js              # Canonical API module & Supabase client wrapper
-│   │   │   ├── auth-context.jsx    # Supabase Auth state & Realtime suspension watch
-│   │   │   └── supabase.js         # Supabase client initialization
-│   │   ├── pages/                  # Upload, Approvals, Users, Document Details, Verify
-│   │   └── services/
-│   │       ├── aiService.js        # Secure AI proxy & semantic search
-│   │       ├── piiService.js       # OCR-tolerant PII detection & fail-soft masking
-│   │       ├── xaiEngine.js        # Saliency analysis, decision trace & consensus
-│   │       ├── documentClassifier.js # Bilingual rule-based classifier
-│   │       └── workflowAutomation.js # Routing & overdue SLA calculation
-│   └── tests/                      # Automated Vitest test suites (27 unit tests)
-│       ├── pii.test.js
-│       ├── xai.test.js
-│       ├── rbac-auth.test.js
-│       ├── document-workflow.test.js
-│       ├── security-check.test.js
-│       └── classification-benchmark.test.js
-└── package.json
->>>>>>> bb28bd9 (feat: complete SDDS security, RBAC oversight, XAI, and privacy overhaul)
 ```
 
 ---
@@ -415,53 +347,65 @@ smartDocumentation/
 ### 1. Prerequisites
 - **Node.js**: v18.0.0 or higher
 - **npm**: v9.0.0 or higher
+- **Supabase CLI** (for Edge Function deployment)
 
 ### 2. Installation
 ```bash
-<<<<<<< HEAD
 git clone https://github.com/Harshal-112/HackathonProject.git
 cd HackathonProject/project
-=======
-cd project
->>>>>>> bb28bd9 (feat: complete SDDS security, RBAC oversight, XAI, and privacy overhaul)
 npm install
 ```
 
 ### 3. Environment Configuration
 Create a `.env` file in the `project/` directory:
 ```env
-VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_URL=https://your-supabase-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
 ```
+> Note: the Gemini key is **not** set here. It is configured only as a server-side Supabase Edge Function secret (Step 5).
 
-### 4. Running Automated Tests
-```bash
-# Run all unit tests & benchmark evaluations
-npm test
-
-# Run tests with coverage
-npm run test:coverage
-```
-
-### 5. Running the Application Locally
+### 4. Running Locally
 ```bash
 npm run dev
 ```
 Open `http://localhost:5173` in your browser.
 
-### 6. Production Build
+### 5. Deploy the AI Edge Function
+```bash
+supabase functions deploy gemini-process
+supabase secrets set GEMINI_API_KEY=your-google-gemini-api-key
+```
+
+### 6. Run the Test Suite
+```bash
+npm test              # run all tests once
+npm run test:coverage # run with coverage report
+```
+
+### 7. Production Build
 ```bash
 npm run build
-<<<<<<< HEAD
 npm run preview
-=======
->>>>>>> bb28bd9 (feat: complete SDDS security, RBAC oversight, XAI, and privacy overhaul)
 ```
 
 ---
 
-<<<<<<< HEAD
-## ✅ Testing & Validation
+## Testing & Validation
+
+### Automated Test Suite (Vitest)
+
+Run with `npm test`. Six focused test files cover the system's highest-risk logic:
+
+| Test File | What It Verifies |
+|---|---|
+| `xai.test.js` | The 5 XAI feature weights always sum to exactly 100% — the transparency layer can't silently drift |
+| `pii.test.js` | Aadhaar/PAN/GSTIN/phone/email/Voter ID/Passport patterns are correctly detected and masked, including OCR-noisy input |
+| `rbac-auth.test.js` | Role boundaries hold — e.g. Admins are strictly rejected from approving/rejecting documents themselves |
+| `document-workflow.test.js` | Auto-routing correctly maps document types (e.g. Land Records) to the right department |
+| `classification-benchmark.test.js` | Rule-engine classification accuracy is measured against a labelled benchmark dataset |
+| `security-check.test.js` | Scans the entire `src/` tree and fails the build if a Google API key pattern or the old exposed-key env var ever reappears |
+
+### Functional Test Cases (Manual UAT)
 
 | ID | Test Case | Expected Result | Status |
 |---|---|---|:---:|
@@ -473,8 +417,8 @@ npm run preview
 | T06 | PII masking | Supported identifiers are masked before AI processing | PASS |
 | T07 | AI summary/metadata | AI output is returned when AI mode is available | PASS |
 | T08 | Smart search | Relevant records are returned and ranked | PASS |
-| T09 | Approval workflow | Status changes are persisted correctly | PASS |
-| T10 | Audit logging | User action appears in audit history | PASS |
+| T09 | Approval workflow | Status changes are persisted correctly via `process_document_decision()` | PASS |
+| T10 | Audit logging | User action appears in audit history and cannot be altered afterward | PASS |
 
 ---
 
@@ -495,11 +439,12 @@ npm run preview
 
 ## Government Compliance and Security Features
 
-- **DPDP Act 2023**: Client-side PII scrubbing prevents citizen data leakage to external LLMs.
-- **Audit Trail**: Every action (upload, view, approve, reject, edit, delete) is logged with user details, role, timestamp, and user agent.
+- **DPDP Act 2023**: Two-layer PII scrubbing (client-side + server-side re-validation) prevents citizen data leakage to external LLMs; requests are rejected rather than sent if masking can't be guaranteed.
+- **Zero Client-Side Secrets**: The Gemini API key exists only as a Supabase Edge Function secret — never in the frontend bundle, `.env`, or git history going forward.
+- **Immutable Audit Trail**: Every upload, approval, rejection, and status change is logged via database triggers with no UPDATE/DELETE policy on `audit_logs` — the trail cannot be edited after the fact, even by an Admin.
+- **Authorization Enforced at the Database, Not Just the UI**: Row Level Security scopes every table by role — Verifiers only see documents assigned to them in their own department; Citizens only see their own uploads. Document decisions are only possible through a `SECURITY DEFINER` RPC that independently re-checks authorization server-side.
 - **WASM Multithreading Security**: `netlify.toml` headers configured with `Cross-Origin-Opener-Policy` and `Cross-Origin-Embedder-Policy` for safe high-speed Tesseract OCR WebAssembly processing.
-- **Role-Based Access Control**: Four-role model (Admin, Officer, Verifier, Citizen) enforced across all protected routes.
-- **Public Verification Isolation**: The `/verify/:id` route is deliberately decoupled from internal document management so exposed data can be constrained to non-sensitive fields only.
+- **Regression-Guarded**: An automated test (`security-check.test.js`) runs on every test invocation and fails the build if a leaked-key pattern is reintroduced into the source tree.
 
 ---
 
@@ -507,13 +452,14 @@ npm run preview
 
 - OCR quality depends strongly on scan resolution, layout, language and document noise.
 - Browser-side OCR can consume significant CPU and memory for large multi-page documents.
-- AI-assisted results depend on external API availability when AI mode is enabled.
+- AI-assisted results depend on Edge Function/external API availability when AI mode is enabled.
 - This is a working prototype, not a production government deployment with full-scale infrastructure, security testing, or operational governance.
+- The public verification endpoint currently limits exposed fields at the application layer; a database-level `SECURITY DEFINER` view/RPC for this specific read path is a planned hardening step (see below).
 ---
 
 ## 🔭 Future Technical Improvements
 
-- Move third-party AI calls behind a server-side/edge-function gateway with secret management and rate limiting.
+- Wrap public document verification in a dedicated `SECURITY DEFINER` RPC so field-minimization is enforced at the database layer, not just the client query.
 - Add document-specific ML/layout models for more robust classification and field extraction.
 - Add stronger tamper detection, digital signatures and integrity verification.
 - Scale OCR and document processing to asynchronous backend workers for large document collections.
@@ -524,25 +470,11 @@ npm run preview
 ## 📚 References
 
 **Frameworks, Libraries & APIs**
-- [React](https://react.dev/) · [Vite](https://vite.dev/) · [Tailwind CSS](https://tailwindcss.com/docs) · [Supabase](https://supabase.com/docs) · [Tesseract.js](https://tesseract.projectnaptha.com/) · [Google Gemini API](https://ai.google.dev/gemini-api/docs) · [Netlify](https://docs.netlify.com/)
+- [React](https://react.dev/) · [Vite](https://vite.dev/) · [Tailwind CSS](https://tailwindcss.com/docs) · [Supabase](https://supabase.com/docs) · [Tesseract.js](https://tesseract.projectnaptha.com/) · [Google Gemini API](https://ai.google.dev/gemini-api/docs) · [Vitest](https://vitest.dev/) · [Netlify](https://docs.netlify.com/)
 
 **Privacy / Regulatory**
 - Digital Personal Data Protection Act, 2023 — Ministry of Electronics and Information Technology (MeitY)
 - Digital Personal Data Protection Rules, 2025 — Ministry of Electronics and Information Technology (MeitY)
-
----
----
-
-## 👨‍💻 Team
-
-**Team Mavericks** — Smart Kopargaon Hackathon (SKH 2026)
-
-| Name | Role |
-|---|---|
-| Harshal Nerkar |  OCR & AI Engineer |
-| Soham Yeshi | Backend Developer |
-| Nikhil Patole | Frontend Developer |
-| Nikhil Jahagirdar | QA & Documentation |
 
 ---
 

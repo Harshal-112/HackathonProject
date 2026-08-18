@@ -1,0 +1,4 @@
+project_id = "xklkwetqnaqwepdoexml"
+
+[functions.gemini-process]
+verify_jwt = false
