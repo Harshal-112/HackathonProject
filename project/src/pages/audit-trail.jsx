@@ -5,7 +5,7 @@ import {
   Monitor, FileText, LogIn, LogOut, Upload, Download as DownloadIcon,
   CheckCircle2, XCircle, Edit, Trash2,
 } from 'lucide-react'
-import { mockApi } from '@/lib/mock-api'
+import { api } from '@/lib/api'
 import { useToast } from '@/lib/toast-context'
 import { PageHeader, EmptyState } from '@/components/shared/page-header'
 import { Card, CardContent } from '@/components/ui/card'
@@ -64,7 +64,7 @@ export default function AuditTrailPage() {
   const fetchLogs = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await mockApi.getAuditLogs({ ...filters, page, pageSize })
+      const res = await api.getAuditLogs({ ...filters, page, pageSize })
       setData(res)
     } catch (err) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' })

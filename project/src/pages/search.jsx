@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Search, Sparkles, FileText, X } from 'lucide-react'
-import { mockApi } from '@/lib/mock-api'
+import { api } from '@/lib/api'
 import { useToast } from '@/lib/toast-context'
 import { PageHeader, EmptyState } from '@/components/shared/page-header'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
@@ -35,7 +35,7 @@ export default function SearchPage() {
     setLoading(true)
     setSearched(true)
     try {
-      const res = await mockApi.searchDocuments(searchQuery)
+      const res = await api.searchDocuments(searchQuery)
       setResults(res)
     } catch (err) {
       toast({ title: 'Search error', description: err.message, variant: 'destructive' })

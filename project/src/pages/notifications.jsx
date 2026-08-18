@@ -6,7 +6,7 @@ import {
   XCircle, RefreshCw, Clock, Info, AlertTriangle, Inbox,
   ExternalLink, X,
 } from 'lucide-react'
-import { mockApi } from '@/lib/mock-api'
+import { api } from '@/lib/api'
 import { useToast } from '@/lib/toast-context'
 import { PageHeader } from '@/components/shared/page-header'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
@@ -151,7 +151,7 @@ export default function NotificationsPage() {
 
   const load = useCallback(async () => {
     try {
-      const data = await mockApi.getNotifications()
+      const data = await api.getNotifications()
       setNotifications(data)
     } catch (err) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' })
@@ -169,7 +169,7 @@ export default function NotificationsPage() {
 
   const handleRead = async (id) => {
     try {
-      await mockApi.markNotificationRead(id)
+      await api.markNotificationRead(id)
       setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n))
     } catch (err) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' })
@@ -178,7 +178,7 @@ export default function NotificationsPage() {
 
   const handleMarkAllRead = async () => {
     try {
-      await mockApi.markAllNotificationsRead()
+      await api.markAllNotificationsRead()
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
       toast({ title: 'All marked as read' })
     } catch (err) {
@@ -188,7 +188,7 @@ export default function NotificationsPage() {
 
   const handleDelete = async (id) => {
     try {
-      await mockApi.deleteNotification(id)
+      await api.deleteNotification(id)
       setNotifications((prev) => prev.filter((n) => n.id !== id))
     } catch (err) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' })
@@ -199,7 +199,7 @@ export default function NotificationsPage() {
     if (!window.confirm('Clear all notifications? This cannot be undone.')) return
     setDeleting(true)
     try {
-      await mockApi.deleteAllNotifications()
+      await api.deleteAllNotifications()
       setNotifications([])
       toast({ title: 'All notifications cleared' })
     } catch (err) {

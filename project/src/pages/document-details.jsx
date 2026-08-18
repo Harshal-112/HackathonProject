@@ -8,7 +8,6 @@ import {
 } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { api } from '@/lib/api'
-import { mockApi } from '@/lib/mock-api'
 import { useAuth } from '@/lib/auth-context'
 import { useToast } from '@/lib/toast-context'
 import { PageHeader, ErrorState } from '@/components/shared/page-header'
@@ -45,7 +44,7 @@ export default function DocumentDetailsPage() {
   const [flagProcessing, setFlagProcessing] = useState(false)
 
   useEffect(() => {
-    mockApi.getDocument(id)
+    api.getDocument(id)
       .then((d) => {
         setDoc(d)
         setEditForm({
@@ -61,7 +60,7 @@ export default function DocumentDetailsPage() {
 
   const handleSave = async () => {
     try {
-      const updated = await mockApi.updateDocument(doc.id, editForm, user)
+      const updated = await api.updateDocument(doc.id, editForm, user)
       setDoc(updated)
       setEditing(false)
       toast({ title: 'Updated', description: 'Document metadata updated', variant: 'success' })
@@ -72,7 +71,7 @@ export default function DocumentDetailsPage() {
 
   const handleDelete = async () => {
     try {
-      await mockApi.deleteDocument(doc.id, user)
+      await api.deleteDocument(doc.id, user)
       toast({ title: 'Deleted', description: 'Document deleted', variant: 'success' })
       navigate('/documents')
     } catch (err) {
@@ -132,7 +131,23 @@ export default function DocumentDetailsPage() {
               <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
                 <Edit className="h-3.5 w-3.5" /> Edit
               </Button>
-              <Button variant="outline" size="sm">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (doc.fileUrl) {
+                    window.open(doc.fileUrl, '_blank')
+                  } else {
+                    const blob = new Blob([`Document Number: ${doc.documentNumber}\nTitle: ${doc.title}\nDepartment: ${doc.department}\nStatus: ${doc.status}\n\n--- OCR TEXT ---\n${doc.ocrText || 'N/A'}`], { type: 'text/plain' })
+                    const url = URL.createObjectURL(blob)
+                    const a = document.createElement('a')
+                    a.href = url
+                    a.download = `${doc.documentNumber || 'document'}.txt`
+                    a.click()
+                    URL.revokeObjectURL(url)
+                  }
+                }}
+              >
                 <Download className="h-3.5 w-3.5" /> Download
               </Button>
               {doc.status === 'approved' && (

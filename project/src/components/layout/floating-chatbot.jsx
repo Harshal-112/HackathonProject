@@ -4,7 +4,7 @@ import { MessageCircle, Brain, X, Send, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { mockApi } from '@/lib/mock-api'
+import { api } from '@/lib/api'
 import { isAIAvailable } from '@/services/aiService'
 
 const QUICK_ACTIONS = [
@@ -91,7 +91,7 @@ export default function FloatingChatbot() {
     setLoading(true)
 
     try {
-      const result = await mockApi.chatWithDocuments(text)
+      const result = await api.chatWithDocuments(text)
       setMessages((prev) => [
         ...prev,
         { role: 'assistant', text: result.response, aiPowered: result.aiPowered },

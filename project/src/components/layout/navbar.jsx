@@ -9,7 +9,7 @@ import { useAuth } from '@/lib/auth-context'
 import { useTheme } from '@/lib/theme-context'
 import { useToast } from '@/lib/toast-context'
 import { usePrivacy } from '@/lib/privacy-context'
-import { mockApi } from '@/lib/mock-api'
+import { api } from '@/lib/api'
 import { cn, initials, timeAgo } from '@/lib/utils'
 import { Avatar } from '@/components/ui/avatar'
 
@@ -61,14 +61,14 @@ export function Navbar({ onMenuClick, notifications = [], onNotificationsChange,
     navigate('/login')
   }
 
-  const markAllRead = async () => {
-    const updated = await mockApi.markAllNotificationsRead()
+  const handleMarkAllRead = async () => {
+    const updated = await api.markAllNotificationsRead()
     onNotificationsChange?.(updated)
   }
 
-  const markOneRead = async (id) => {
+  const handleMarkRead = async (id) => {
     try {
-      await mockApi.markNotificationRead(id)
+      await api.markNotificationRead(id)
       onNotificationsChange?.(notifications.map((n) => n.id === id ? { ...n, read: true } : n))
     } catch (_) {}
   }

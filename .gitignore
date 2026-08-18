@@ -1,5 +1,6 @@
 node_modules/
 .env
 project/dist/
+.temp/
+**/.temp/
 *.exe
-supabase.exe

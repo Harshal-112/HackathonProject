@@ -27,6 +27,7 @@ function toDoc(row) {
     fileName: row.file_name,
     fileType: row.file_type,
     fileSize: row.file_size,
+    fileUrl: row.file_url || null,
     category: row.category,            // null if not determined
     department: row.department,
     priority: row.priority,            // null if not determined
@@ -332,11 +333,30 @@ export const api = {
     const assignedVerifier = dept ? await findLeastLoadedVerifier(dept) : null
     const assignedAt = assignedVerifier ? new Date().toISOString() : null
 
+    // Optional: Upload original scanned file to Supabase Storage bucket
+    let fileUrl = null
+    if (file instanceof Blob || (typeof File !== 'undefined' && file instanceof File)) {
+      try {
+        const fileExt = file.name.split('.').pop().toLowerCase()
+        const storagePath = `${user.id}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`
+        const { data: storageData, error: storageErr } = await supabase.storage
+          .from('documents')
+          .upload(storagePath, file, { cacheControl: '3600', upsert: false })
+        if (!storageErr && storageData?.path) {
+          const { data: urlData } = supabase.storage.from('documents').getPublicUrl(storageData.path)
+          fileUrl = urlData?.publicUrl || null
+        }
+      } catch (_) {
+        // Storage upload fail-soft (if bucket not configured)
+      }
+    }
+
     const row = {
       title: ocrData?.metadata?.title || metadata.title || file.name.replace(/\.[^.]+$/, ''),
       file_name: file.name,
       file_type: file.name.split('.').pop().toLowerCase(),
       file_size: file.size,
+      file_url: fileUrl,
       category: catId,
       department: dept,
       priority: priorityId,
@@ -419,25 +439,39 @@ export const api = {
 
   // --- Public Document Verification (Data-Minimization Enforced) -----------
   async getPublicDocumentVerification(id) {
-    const { data, error } = await supabase
-      .from('documents')
-      .select('id, title, status, document_number, department, category, created_at, updated_at')
+    // Queries the secure public view or RPC, preventing raw OCR / PII exposure
+    let result = null
+    const { data: viewData, error: viewError } = await supabase
+      .from('public_document_verifications')
+      .select('id, title, status, document_number, department, category, created_at, updated_at, is_authentic')
       .eq('id', id)
       .maybeSingle()
-    if (error) throw new Error(error.message)
-    if (!data) throw new Error('Document not found.')
+
+    if (!viewError && viewData) {
+      result = viewData
+    } else {
+      // Fallback query to documents table if migration view not yet executed
+      const { data, error } = await supabase
+        .from('documents')
+        .select('id, title, status, document_number, department, category, created_at, updated_at')
+        .eq('id', id)
+        .maybeSingle()
+      if (error) throw new Error(error.message)
+      if (!data) throw new Error('Document not found.')
+      result = { ...data, is_authentic: data.status === 'approved' }
+    }
     
     // Return sanitized public verification record with no internal personal/verifier data
     return {
-      id: data.id,
-      title: data.title,
-      status: data.status,
-      documentNumber: data.document_number,
-      department: data.department,
-      category: data.category,
-      createdAt: data.created_at,
-      updatedAt: data.updated_at,
-      isAuthentic: data.status === 'approved',
+      id: result.id,
+      title: result.title,
+      status: result.status,
+      documentNumber: result.document_number,
+      department: result.department,
+      category: result.category,
+      createdAt: result.created_at,
+      updatedAt: result.updated_at,
+      isAuthentic: Boolean(result.is_authentic),
     }
   },
 

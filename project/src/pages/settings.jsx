@@ -5,7 +5,7 @@ import {
   Bell, Shield, RefreshCw, Lightbulb, Lock, Eye, EyeOff, Fingerprint, CreditCard, Phone, Mail,
   Database, ScrollText, ShieldCheck,
 } from 'lucide-react'
-import { mockApi } from '@/lib/mock-api'
+import { api } from '@/lib/api'
 import { DEMO_SETTINGS } from '@/lib/mock-data'
 import { useToast } from '@/lib/toast-context'
 import { useTheme } from '@/lib/theme-context'
@@ -33,7 +33,7 @@ export default function SettingsPage() {
 
   useEffect(() => {
     setLoading(true)
-    mockApi.getSettings()
+    api.getSettings()
       .then((s) => {
         const loaded = s && Object.keys(s).length ? s : DEMO_SETTINGS
         
@@ -97,7 +97,7 @@ export default function SettingsPage() {
   const handleSave = async (section) => {
     setSaving(true)
     try {
-      await mockApi.updateSettings(settings)
+      await api.updateSettings(settings)
       toast({ title: 'Settings saved', description: `${section} settings updated`, variant: 'success' })
     } catch (err) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' })

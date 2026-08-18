@@ -6,7 +6,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useToast } from '@/lib/toast-context'
-import { mockApi } from '@/lib/mock-api'
+import { api } from '@/lib/api'
 import { PageHeader } from '@/components/shared/page-header'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -30,7 +30,7 @@ export default function ProfilePage() {
 
   const handleSave = async () => {
     try {
-      const updated = await mockApi.updateUser(user.id, form)
+      const updated = await api.updateUser(user.id, form)
       updateUser(updated)
       setEditing(false)
       toast({ title: 'Profile updated', description: 'Your profile has been saved', variant: 'success' })

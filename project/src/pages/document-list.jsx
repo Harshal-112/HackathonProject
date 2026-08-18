@@ -5,7 +5,7 @@ import {
   FileText, Search, Filter, Download, Eye, Trash2, Edit, ChevronLeft, ChevronRight,
   ArrowUpDown, FileSpreadsheet, MoreHorizontal, X,
 } from 'lucide-react'
-import { mockApi } from '@/lib/mock-api'
+import { api } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
 import { useToast } from '@/lib/toast-context'
 import { PageHeader, EmptyState } from '@/components/shared/page-header'
@@ -47,7 +47,7 @@ export default function DocumentListPage() {
   const fetchDocs = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await mockApi.getDocuments({ ...filters, page, pageSize, sortBy, sortDir })
+      const res = await api.getDocuments({ ...filters, page, pageSize, sortBy, sortDir })
       setData(res)
     } catch (err) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' })
@@ -90,7 +90,7 @@ export default function DocumentListPage() {
 
   const handleDelete = async () => {
     try {
-      await mockApi.deleteDocument(deleteTarget.id, user)
+      await api.deleteDocument(deleteTarget.id, user)
       toast({ title: 'Document deleted', description: deleteTarget.title, variant: 'success' })
       setDeleteTarget(null)
       fetchDocs()
@@ -101,7 +101,7 @@ export default function DocumentListPage() {
 
   const handleBulkDelete = async () => {
     for (const id of selected) {
-      await mockApi.deleteDocument(id, user)
+      await api.deleteDocument(id, user)
     }
     toast({ title: 'Documents deleted', description: `${selected.size} documents removed`, variant: 'success' })
     setSelected(new Set())

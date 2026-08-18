@@ -9,7 +9,7 @@ import {
   ResponsiveContainer, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from 'recharts'
-import { mockApi } from '@/lib/mock-api'
+import { api } from '@/lib/api'
 import { useAuth } from '@/lib/auth-context'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -26,7 +26,7 @@ export default function DashboardPage() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    mockApi.getDashboardStats(user)
+    api.getDashboardStats(user)
       .then((d) => { setData(d); setLoading(false) })
       .catch(() => setLoading(false))
   }, [user])

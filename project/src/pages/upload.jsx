@@ -9,7 +9,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 import { useToast } from '@/lib/toast-context'
-import { mockApi } from '@/lib/mock-api'
+import { api } from '@/lib/api'
 import { PageHeader } from '@/components/shared/page-header'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -233,7 +233,7 @@ export default function UploadPage() {
           }
         }
 
-        await mockApi.uploadDocument(f.file, metadata, user, ocrData)
+        await api.uploadDocument(f.file, metadata, user, ocrData)
       }
 
       setCurrentStageId('done')

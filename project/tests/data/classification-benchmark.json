@@ -1,7 +1,7 @@
 [
   {
     "id": "bench_01",
-    "description": "Maharashtra 7/12 Land Record Extract",
+    "description": "Maharashtra 7/12 Land Record Extract (Marathi)",
     "text": "महाराष्ट्र शासन महसूल व वन विभाग गाव नमुना सात (७/१२) अधिकार अभिलेख पत्रक गट क्रमांक ४५/२ भूमापन क्रमांक क्षेत्र ०.४५ हेक्टर आर खाते क्रमांक १२८ भोगवटदार वर्ग १",
     "expectedDepartment": "revenue",
     "expectedCategory": "land",
@@ -10,7 +10,88 @@
   },
   {
     "id": "bench_02",
-    "description": "Aadhaar Identity Card",
+    "description": "7/12 Satbara Extract with Survey Number (English)",
+    "text": "Government of Maharashtra Revenue and Forest Department Village Form VII-XII Satbara Land Record Extract Survey Number 142 Gat Number 56 Area 1.20 Hectare Khata Number 344",
+    "expectedDepartment": "revenue",
+    "expectedCategory": "land",
+    "expectedType": "Land Record (7/12)",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_03",
+    "description": "Village Form 8A Khate Utarak (Marathi)",
+    "text": "गाव नमुना आठ अ खातेदाराच्या जमिनीचा संपूर्ण गोषवारा खाते क्रमांक ५४ गट क्रमांक ८९/१ एकूण क्षेत्र १.८५ हेक्टर महसूल आकारणी रुपये तहसीलदार कार्यालय हवेली",
+    "expectedDepartment": "revenue",
+    "expectedCategory": "land",
+    "expectedType": "Land Record (7/12)",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_04",
+    "description": "Ferfar Mutation Entry (Marathi)",
+    "text": "गाव नमुना सहा फेरफार नोंद वही नोंद क्रमांक ४५८९ खरेदी खत अन्वये नवीन भोगवटदार नाव नोंद गट नंबर ३४/१ सातबारा अभिलेख सुधारणा तलाठी स्वाक्षरी",
+    "expectedDepartment": "revenue",
+    "expectedCategory": "land",
+    "expectedType": "Land Record (7/12)",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_05",
+    "description": "Property Card City Survey (English/Marathi)",
+    "text": "Land Records Department City Survey Office Pune Property Card City Survey Number 112/A Sheet No 44 Area 450 Sq Meters Ownership Title Malmatta Patrak",
+    "expectedDepartment": "revenue",
+    "expectedCategory": "land",
+    "expectedType": "Property Card",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_06",
+    "description": "Non-Agricultural (NA) Land Permission Order",
+    "text": "Office of the District Collector Revenue Branch Non-Agricultural Permission Order under Section 44 Maharashtra Land Revenue Code Survey No 78 conversion to residential",
+    "expectedDepartment": "revenue",
+    "expectedCategory": "land",
+    "expectedType": "Land Record (7/12)",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_07",
+    "description": "Khasra Pahani Land Revenue Extract",
+    "text": "Department of Land Revenue Khasra Extract khata number 45 khasra number 89/2 agricultural land holding cultivator details",
+    "expectedDepartment": "revenue",
+    "expectedCategory": "land",
+    "expectedType": "Land Record (7/12)",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_08",
+    "description": "Talathi Land Inspection Panchnama",
+    "text": "तलाठी कार्यालय मौजे पाषाण पंचनामा जमीन ताबा व सीमा पाहणी गट क्र १२/३ महसूल विभाग पंच साक्षीदार स्वाक्षरी",
+    "expectedDepartment": "revenue",
+    "expectedCategory": "land",
+    "expectedType": "Land Record (7/12)",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_09",
+    "description": "Land Acquisition Compensation Award Notice",
+    "text": "Special Land Acquisition Officer Revenue Department Public Notice of Award under Section 23 Highway Project Gat Number 102 Affected Landholders Compensation",
+    "expectedDepartment": "revenue",
+    "expectedCategory": "land",
+    "expectedType": "Land Record (7/12)",
+    "expectedPriority": "high"
+  },
+  {
+    "id": "bench_10",
+    "description": "Revenue Recovery Certificate (RRC)",
+    "text": "Collector Office Revenue Recovery Certificate RRC/2026/89 Recovery of government dues arrears land revenue survey number 22",
+    "expectedDepartment": "revenue",
+    "expectedCategory": "land",
+    "expectedType": "Land Record (7/12)",
+    "expectedPriority": "urgent"
+  },
+  {
+    "id": "bench_11",
+    "description": "Aadhaar Identity Card (English)",
     "text": "Government of India Unique Identification Authority of India UIDAI Enrollment No 1234/56789/01234 To Ramesh Kumar Sharma 123 Shivaji Nagar Pune Maharashtra 411005 5489 2145 9876 Mera Aadhaar Meri Pehchan",
     "expectedDepartment": "collector",
     "expectedCategory": "identity",
@@ -18,8 +99,17 @@
     "expectedPriority": "medium"
   },
   {
-    "id": "bench_03",
-    "description": "Permanent Account Number (PAN) Card",
+    "id": "bench_12",
+    "description": "Aadhaar Card (Marathi Bilingual)",
+    "text": "भारत सरकार विशिष्ट ओळख प्राधिकरण आधार कार्ड नाव: सुनीता सुरेश देशमुख पत्ता: मु.पो. कोपरगाव जि. अहमदनगर ४२३६०१ आधार क्रमांक: ९८७६ ५४३२ १०१२",
+    "expectedDepartment": "collector",
+    "expectedCategory": "identity",
+    "expectedType": "Aadhaar Card",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_13",
+    "description": "Permanent Account Number (PAN) Card (Upper)",
     "text": "INCOME TAX DEPARTMENT GOVT OF INDIA Permanent Account Number Card ABCDE1234F Father Name SURESH GUPTA Date of Birth 15/08/1990",
     "expectedDepartment": "collector",
     "expectedCategory": "identity",
@@ -27,8 +117,161 @@
     "expectedPriority": "medium"
   },
   {
-    "id": "bench_04",
-    "description": "Government Resolution (GR) / Health Circular",
+    "id": "bench_14",
+    "description": "PAN Card with Marathi Header",
+    "text": "भारत सरकार आयकर विभाग कायमस्वरूपी खाते क्रमांक PAN Card Number XYZPK9876L नाव: विकास जोशी जन्म तारीख ०४/०५/१९९५",
+    "expectedDepartment": "collector",
+    "expectedCategory": "identity",
+    "expectedType": "PAN Card",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_15",
+    "description": "Republic of India Passport",
+    "text": "PASSPORT REPUBLIC OF INDIA Ministry of External Affairs Passport No Z1234567 Given Name ANJALI Surname PATEL Nationality INDIAN Date of Issue 10/01/2024",
+    "expectedDepartment": "collector",
+    "expectedCategory": "identity",
+    "expectedType": "Passport",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_16",
+    "description": "Election Commission of India Voter ID (EPIC)",
+    "text": "ELECTION COMMISSION OF INDIA Elector Photo Identity Card EPIC No ABC1234567 Name: Vijay Patil Assembly Constituency 204 Baramati Parliamentary Constituency Voter List",
+    "expectedDepartment": "collector",
+    "expectedCategory": "identity",
+    "expectedType": "Voter ID",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_17",
+    "description": "Public Distribution Ration Card (Marathi)",
+    "text": "महाराष्ट्र शासन अन्न व नागरी पुरवठा विभाग रेशन कार्ड राष्ट्रीय अन्न सुरक्षा योजना शिधापत्रिका क्रमांक बीपीएल ४५८९ कौटुंबिक तपशील स्वस्त धान्य दुकान",
+    "expectedDepartment": "collector",
+    "expectedCategory": "identity",
+    "expectedType": "Ration Card",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_18",
+    "description": "RTO Smart Card Driving Licence",
+    "text": "INDIAN UNION MOTOR VEHICLES DEPARTMENT Driving Licence Maharashtra State MH-12-20190045899 Authorised to drive LMV Transport Valid till 15/06/2035 RTO Pune",
+    "expectedDepartment": "rto",
+    "expectedCategory": "license",
+    "expectedType": "Driving Licence",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_19",
+    "description": "RTO Learner License Form",
+    "text": "Ministry of Road Transport and Highways Form 3 Learner Licence No LL/MH12/2026/455 Motor Vehicles Act RTO Officer Pune",
+    "expectedDepartment": "rto",
+    "expectedCategory": "license",
+    "expectedType": "Driving Licence",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_20",
+    "description": "RTO Vehicle Registration Certificate (RC)",
+    "text": "Government of Maharashtra Transport Department Certificate of Registration Form 23 Reg No MH-12-AB-1234 Chassis No 5489 Engine No 9876 RTO Office",
+    "expectedDepartment": "rto",
+    "expectedCategory": "license",
+    "expectedType": "Driving Licence",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_21",
+    "description": "Caste Certificate by Tehsildar",
+    "text": "Government of Maharashtra Office of the Tehsildar Caste Certificate This is to certify that Shri Rahul Shinde belongs to Maratha/Kunbi Caste Other Backward Class (OBC)",
+    "expectedDepartment": "collector",
+    "expectedCategory": "certificate",
+    "expectedType": "Caste Certificate",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_22",
+    "description": "Caste Validity Certificate (Scrutiny Committee)",
+    "text": "DISTRICT CASTE CERTIFICATE SCRUTINY COMMITTEE PUNE CASTE VALIDITY CERTIFICATE Form G [See Rule 12] Other Backward Class (OBC) Kunbi Caste Validation No. 4589/2026",
+    "expectedDepartment": "collector",
+    "expectedCategory": "certificate",
+    "expectedType": "Caste Certificate",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_23",
+    "description": "Tehsildar Annual Income Certificate (Marathi)",
+    "text": "तहसीलदार कार्यालय हवेली उत्पन्न प्रमाणपत्र सन २०२५-२०२६ चे वार्षिक उत्पन्न रुपये १,५०,००० (एक लाख पन्नास हजार) असल्याचे प्रमाणित करण्यात येत आहे",
+    "expectedDepartment": "collector",
+    "expectedCategory": "certificate",
+    "expectedType": "Income Certificate",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_24",
+    "description": "Domicile and Nationality Certificate",
+    "text": "Executive Magistrate and Sub-Divisional Officer Domicile Certificate and Nationality Certificate Resident of State of Maharashtra for more than 15 years",
+    "expectedDepartment": "collector",
+    "expectedCategory": "certificate",
+    "expectedType": "Domicile Certificate",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_25",
+    "description": "Non-Creamy Layer (NCL) Certificate",
+    "text": "Sub-Divisional Office Non-Creamy Layer Certificate for OBC category applicant does not belong to the Creamy Layer section as per government norms",
+    "expectedDepartment": "collector",
+    "expectedCategory": "certificate",
+    "expectedType": "Caste Certificate",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_26",
+    "description": "Municipal Corporation Birth Certificate (Form 5)",
+    "text": "PUNE MUNICIPAL CORPORATION Health Department Form No 5 Birth Certificate under Registration of Births and Deaths Act Date of Birth 12/04/2020 Place of Birth Sassoon Hospital",
+    "expectedDepartment": "collector",
+    "expectedCategory": "legal",
+    "expectedType": "Birth Certificate",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_27",
+    "description": "Gram Panchayat Death Certificate (Marathi)",
+    "text": "ग्रामपंचायत कार्यालय कोपरगाव मृत्यू प्रमाणपत्र जन्म आणि मृत्यू नोंदणी अधिनियम १९६९ अन्वये नोंद मृत्यू तारीख ०८/०१/२०२६ नोंदणी क्रमांक ४५/२०२६",
+    "expectedDepartment": "collector",
+    "expectedCategory": "legal",
+    "expectedType": "Death Certificate",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_28",
+    "description": "Marriage Registration Certificate",
+    "text": "Office of the Registrar of Marriages Maharashtra State Marriage Certificate Memorandum of Marriage Registration Husband and Wife photo seal of registrar",
+    "expectedDepartment": "collector",
+    "expectedCategory": "legal",
+    "expectedType": "Marriage Certificate",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_29",
+    "description": "Unique Disability ID (UDID) Certificate",
+    "text": "District Medical Authority Civil Surgeon Office Permanent Disability Certificate Locomotor Disability 45 percent UDID Card Issue No 4589",
+    "expectedDepartment": "collector",
+    "expectedCategory": "certificate",
+    "expectedType": "Caste Certificate",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_30",
+    "description": "Collectorate Solvency Certificate",
+    "text": "Collector Office Revenue Branch Solvency Certificate Solvency of contractor certified to the extent of Rs 50,00,000 against verified immovable property",
+    "expectedDepartment": "collector",
+    "expectedCategory": "certificate",
+    "expectedType": "Income Certificate",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_31",
+    "description": "Health Department Government Resolution (GR)",
     "text": "महाराष्ट्र शासन सार्वजनिक आरोग्य विभाग शासन निर्णय क्रमांक संकीर्ण-२०२६/प्र.क्र.४५/आरोग्य-३ मंत्रालय मुंबई ४०००३२ तात्काळ अंमलबजावणी बाबत परिपत्रक आरोग्य केंद्र सुविधा",
     "expectedDepartment": "health",
     "expectedCategory": "health",
@@ -36,8 +279,89 @@
     "expectedPriority": "urgent"
   },
   {
-    "id": "bench_05",
-    "description": "High Court Legal Order",
+    "id": "bench_32",
+    "description": "Education Department Corrigendum / Shuddhipatrak",
+    "text": "महाराष्ट्र शासन शालेय शिक्षण व क्रीडा विभाग शुद्धिपत्रक क्रमांक प्राशि-२०२६/३४ मंत्रालय विस्तार भवन मुंबई शिक्षक भरती सुधारित मार्गदर्शक सूचना",
+    "expectedDepartment": "education",
+    "expectedCategory": "education",
+    "expectedType": "Government Order/Letter",
+    "expectedPriority": "urgent"
+  },
+  {
+    "id": "bench_33",
+    "description": "Revenue Department Official Circular (Marathi)",
+    "text": "महाराष्ट्र शासन महसूल व वन विभाग परिपत्रक ई-हक्क प्रणालीद्वारे जमीन फेरफार अर्ज निकाली काढण्याबाबत सर्व जिल्हाधिकारी व तहसीलदार यांना निर्देश",
+    "expectedDepartment": "revenue",
+    "expectedCategory": "land",
+    "expectedType": "Government Order/Letter",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_34",
+    "description": "Agriculture Department Subsidy Resolution",
+    "text": "महाराष्ट्र शासन कृषी व पदुम विभाग शासन निर्णय ठिबक सिंचन योजना अनुदान वाटप कृषी अधिकारी जिल्हा परिषद",
+    "expectedDepartment": "agri",
+    "expectedCategory": "notice",
+    "expectedType": "Government Order/Letter",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_35",
+    "description": "Transport Department Road Safety Circular",
+    "text": "Government of Maharashtra Home Department Transport Circular RTO Inspection Guidelines for School Buses and Commercial Vehicles",
+    "expectedDepartment": "rto",
+    "expectedCategory": "license",
+    "expectedType": "Government Order/Letter",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_36",
+    "description": "Finance Department Budget Sanction Order",
+    "text": "Government of Maharashtra Finance Department Government Order Budget Allocation and Financial Sanction for Infrastructure Development Scheme",
+    "expectedDepartment": "collector",
+    "expectedCategory": "administration",
+    "expectedType": "Government Order/Letter",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_37",
+    "description": "General Administration Dept (GAD) Transfer Order",
+    "text": "महाराष्ट्र शासन सामान्य प्रशासन विभाग शासन निर्णय वर्ग १ अधिकाऱ्यांच्या बदल्या व पदस्थापना मंत्रालय मुंबई",
+    "expectedDepartment": "collector",
+    "expectedCategory": "administration",
+    "expectedType": "Government Order/Letter",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_38",
+    "description": "Disaster Management Emergency Circular",
+    "text": "District Disaster Management Authority Collector Office Urgent Circular Flash Flood and Heavy Rainfall Warning Immediate Response Protocol",
+    "expectedDepartment": "collector",
+    "expectedCategory": "administration",
+    "expectedType": "Government Order/Letter",
+    "expectedPriority": "urgent"
+  },
+  {
+    "id": "bench_39",
+    "description": "State Election Commission Municipal Notification",
+    "text": "State Election Commission Maharashtra Gazette Notification Municipal Corporation Ward Delimitation and Reservation Schedule",
+    "expectedDepartment": "municipal",
+    "expectedCategory": "administration",
+    "expectedType": "Government Order/Letter",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_40",
+    "description": "Gram Vikas Department Welfare GR",
+    "text": "महाराष्ट्र शासन ग्रामविकास व पंचायत राज विभाग शासन निर्णय १५ वा वित्त आयोग निधी ग्रामपंचायत विकास आराखडा",
+    "expectedDepartment": "panchayat",
+    "expectedCategory": "administration",
+    "expectedType": "Government Order/Letter",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_41",
+    "description": "Bombay High Court Writ Petition Judgment",
     "text": "IN THE HIGH COURT OF JUDICATURE AT BOMBAY WRIT PETITION NO. 4589 OF 2026 IN THE MATTER OF ARTICLE 226 OF THE CONSTITUTION OF INDIA PETITIONER VERSUS STATE OF MAHARASHTRA RESPONDENT ORDER AND JUDGMENT",
     "expectedDepartment": "collector",
     "expectedCategory": "legal",
@@ -45,35 +369,179 @@
     "expectedPriority": "high"
   },
   {
-    "id": "bench_06",
-    "description": "GST Commercial Invoice",
-    "text": "TAX INVOICE M/S SHREE ENTERPRISES GSTIN: 27ABCDE1234F1Z5 INVOICE NO: INV-2026-89 DATE: 12-01-2026 BILL TO: PUNE MUNICIPAL CORPORATION TOTAL AMOUNT RS. 45000 SGST CGST PAID",
+    "id": "bench_42",
+    "description": "District & Sessions Court Civil Injunction Order",
+    "text": "IN THE COURT OF DISTRICT JUDGE PUNE Civil Suit No 124/2026 Plaintiff vs Defendant Injunction Order restraining interference in land possession",
+    "expectedDepartment": "collector",
+    "expectedCategory": "legal",
+    "expectedType": "Court Order",
+    "expectedPriority": "high"
+  },
+  {
+    "id": "bench_43",
+    "description": "Police Station FIR (Section 154 CrPC)",
+    "text": "FIRST INFORMATION REPORT (Under Section 154 Cr.P.C.) FIR No. 0124/2026 Police Station Shivajinagar Date and Time of Occurrence 10/02/2026 Offence u/s 379 IPC Complainant Name",
+    "expectedDepartment": "collector",
+    "expectedCategory": "legal",
+    "expectedType": "FIR",
+    "expectedPriority": "high"
+  },
+  {
+    "id": "bench_44",
+    "description": "Police Station Non-Cognizable (NC) Complaint",
+    "text": "Police Station Kothrud Non Cognizable Offence Report NC No 458/2026 Section 155 CrPC Complainant Statement and Accused Details",
+    "expectedDepartment": "collector",
+    "expectedCategory": "legal",
+    "expectedType": "FIR",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_45",
+    "description": "Notarized Self-Declaration Affidavit (Marathi)",
+    "text": "महाराष्ट्र शासन प्रतिज्ञापत्र / शपथपत्र मी खालील स्वाक्षरी करणार प्रतिज्ञापत्राद्वारे जाहीर करतो की वरील माहिती खरी व अचूक आहे नोटरी स्वाक्षरी व शिक्का",
+    "expectedDepartment": "collector",
+    "expectedCategory": "legal",
+    "expectedType": "Affidavit",
+    "expectedPriority": "low"
+  },
+  {
+    "id": "bench_46",
+    "description": "General Power of Attorney (Affidavit)",
+    "text": "General Power of Attorney Sworn Before Notary Public appoint and authorise attorney to execute property sale deed and revenue representation",
+    "expectedDepartment": "collector",
+    "expectedCategory": "legal",
+    "expectedType": "Affidavit",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_47",
+    "description": "Legal Heirship Waras Affidavit",
+    "text": "Affidavit of Legal Heirs Waras Certificate application sworn statement of surviving wife and children of deceased land owner",
+    "expectedDepartment": "collector",
+    "expectedCategory": "legal",
+    "expectedType": "Affidavit",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_48",
+    "description": "Consumer Disputes Redressal Forum Notice",
+    "text": "District Consumer Disputes Redressal Commission Pune Notice of Complaint Case No 89/2026 Petitioner vs Respondent hearing date",
+    "expectedDepartment": "collector",
+    "expectedCategory": "legal",
+    "expectedType": "Court Order",
+    "expectedPriority": "high"
+  },
+  {
+    "id": "bench_49",
+    "description": "Pune Municipal Corporation Property Tax Bill",
+    "text": "PUNE MUNICIPAL CORPORATION Assessment and Collection Department Property Tax Bill Ward 12 Malmatta Kar Pavti Annual Tax Rs 8500",
     "expectedDepartment": "municipal",
     "expectedCategory": "finance",
     "expectedType": "Invoice",
     "expectedPriority": "medium"
   },
   {
-    "id": "bench_07",
-    "description": "Caste Validity Certificate",
-    "text": "DISTRICT CASTE CERTIFICATE SCRUTINY COMMITTEE PUNE CASTE VALIDITY CERTIFICATE Form G [See Rule 12] Other Backward Class (OBC) Kunbi Caste Validation No. 4589/2026",
-    "expectedDepartment": "collector",
-    "expectedCategory": "identity",
-    "expectedType": "Caste Certificate",
+    "id": "bench_50",
+    "description": "Municipal Corporation Water Tax Demand Notice",
+    "text": "Municipal Corporation Water Supply Department Water Tax Bill and Demand Notice Meter No 4589 outstanding charges payable within 15 days",
+    "expectedDepartment": "municipal",
+    "expectedCategory": "finance",
+    "expectedType": "Invoice",
     "expectedPriority": "medium"
   },
   {
-    "id": "bench_08",
-    "description": "Gram Panchayat Property Tax / NOC",
+    "id": "bench_51",
+    "description": "Municipal Building Sanction Permission Plan",
+    "text": "Municipal Corporation Town Planning Department Building Permission Order and Sanctioned Layout Plan Plot No 45 Commencement Certificate",
+    "expectedDepartment": "municipal",
+    "expectedCategory": "certificate",
+    "expectedType": "NOC",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_52",
+    "description": "Shop & Establishment Trade License (Gumasta)",
+    "text": "Municipal Corporation Shop and Establishment Department Trade License Form C Gumasta Registration Retail Store Valid 2026-2031",
+    "expectedDepartment": "municipal",
+    "expectedCategory": "license",
+    "expectedType": "Trade License",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_53",
+    "description": "Gram Panchayat No Objection Certificate (NOC)",
     "text": "ग्रामपंचायत कार्यालय बाणेर ता. हवेली जि. पुणे नमुना ८ अ मालमत्ता कर पावती / ना हरकत प्रमाणपत्र (NOC) ग्रामसेवक / सरपंच स्वाक्षरी",
     "expectedDepartment": "panchayat",
-    "expectedCategory": "administration",
+    "expectedCategory": "certificate",
     "expectedType": "NOC",
     "expectedPriority": "low"
   },
   {
-    "id": "bench_09",
-    "description": "University Degree / Academic Marksheet",
+    "id": "bench_54",
+    "description": "Gram Sabha Resolution (Marathi)",
+    "text": "ग्रामपंचायत कार्यालय ग्रामसभा ठराव क्रमांक १२/२०२६ गाव विकास कामे व पाणीपुरवठा मंजुरी सरपंच उपसरपंच स्वाक्षरी",
+    "expectedDepartment": "panchayat",
+    "expectedCategory": "administration",
+    "expectedType": "Government Order/Letter",
+    "expectedPriority": "low"
+  },
+  {
+    "id": "bench_55",
+    "description": "PM Kisan Samman Nidhi Sanction",
+    "text": "Department of Agriculture and Farmers Welfare PM Kisan Samman Nidhi Direct Benefit Transfer beneficiary farmer registration approved survey no 12",
+    "expectedDepartment": "agri",
+    "expectedCategory": "notice",
+    "expectedType": "Government Order/Letter",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_56",
+    "description": "Pradhan Mantri Fasal Bima Yojana (Pik Vima)",
+    "text": "कृषी विभाग प्रधानमंत्री पिक विमा योजना पावती खरीप हंगाम शेतकरी अर्ज क्रमांक ४५८९ पिक नुकसान भरपाई नोंदणी",
+    "expectedDepartment": "agri",
+    "expectedCategory": "finance",
+    "expectedType": "Invoice",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_57",
+    "description": "Agriculture Drip Irrigation Subsidy Grant",
+    "text": "कृषी अधिकारी कार्यालय ठिबक सिंचन व तुषार सिंचन अनुदान मंजुरी पत्रक शेतकरी लाभार्थी यादी कृषी विकास",
+    "expectedDepartment": "agri",
+    "expectedCategory": "notice",
+    "expectedType": "Government Order/Letter",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_58",
+    "description": "Soil Health Card / Mruda Arogya Patrika",
+    "text": "Department of Agriculture Soil Health Card Soil Testing Laboratory NPK Analysis Micronutrients Recommendation for Farmer",
+    "expectedDepartment": "agri",
+    "expectedCategory": "notice",
+    "expectedType": "Government Order/Letter",
+    "expectedPriority": "low"
+  },
+  {
+    "id": "bench_59",
+    "description": "Farmer Flood Crop Loss Panchnama (Marathi)",
+    "text": "कृषी व महसूल विभाग संयुक्त पंचनामा अतिवृष्टीमुळे पिकांचे नुकसान गट क्र ३४ पंचनामा क्षेत्र १.५ हेक्टर भरपाई शिफारस",
+    "expectedDepartment": "agri",
+    "expectedCategory": "land",
+    "expectedType": "Land Record (7/12)",
+    "expectedPriority": "urgent"
+  },
+  {
+    "id": "bench_60",
+    "description": "Agricultural Land Valuation Certificate",
+    "text": "Agriculture and Revenue Department Ready Reckoner Land Valuation Certificate for Bank Loan Mortgage Gat No 45",
+    "expectedDepartment": "agri",
+    "expectedCategory": "land",
+    "expectedType": "Land Record (7/12)",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_61",
+    "description": "SPPU University Engineering Degree Marksheet",
     "text": "SAVITRIBAI PHULE PUNE UNIVERSITY Faculty of Science and Technology Bachelor of Engineering Statement of Marks and Grades Seat No. B19004589 Passing Certificate",
     "expectedDepartment": "education",
     "expectedCategory": "education",
@@ -81,12 +549,354 @@
     "expectedPriority": "low"
   },
   {
-    "id": "bench_10",
-    "description": "Police Station FIR",
-    "text": "FIRST INFORMATION REPORT (Under Section 154 Cr.P.C.) FIR No. 0124/2026 Police Station Shivajinagar Date and Time of Occurrence 10/02/2026 Offence u/s 379 IPC Complainant Name",
+    "id": "bench_62",
+    "description": "State Board SSC Passing Certificate",
+    "text": "Maharashtra State Board of Secondary and Higher Secondary Education Pune SSC Examination Certificate Statement of Marks Grade Distinction",
+    "expectedDepartment": "education",
+    "expectedCategory": "education",
+    "expectedType": "University Document",
+    "expectedPriority": "low"
+  },
+  {
+    "id": "bench_63",
+    "description": "School Leaving Certificate / Transfer Certificate",
+    "text": "Zilla Parishad Primary School Leaving Certificate School Transfer Certificate General Register No 458 Date of Birth verified School Principal seal",
+    "expectedDepartment": "education",
+    "expectedCategory": "education",
+    "expectedType": "University Document",
+    "expectedPriority": "low"
+  },
+  {
+    "id": "bench_64",
+    "description": "Post-Matric MahaDBT Scholarship Sanction",
+    "text": "Department of Higher and Technical Education MahaDBT Scholarship Sanction Order Tuition Fee Reimbursement College Scrutiny Approved",
+    "expectedDepartment": "education",
+    "expectedCategory": "education",
+    "expectedType": "University Document",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_65",
+    "description": "University Migration Certificate",
+    "text": "University Registrar Office Migration Certificate Student Leaving for Higher Studies No Objection for Admission",
+    "expectedDepartment": "education",
+    "expectedCategory": "education",
+    "expectedType": "University Document",
+    "expectedPriority": "low"
+  },
+  {
+    "id": "bench_66",
+    "description": "Pavitra Portal Teacher Recruitment Scrutiny Form",
+    "text": "School Education Department Pavitra Portal Teacher Recruitment Scrutiny Verification Document Candidate Merit List",
+    "expectedDepartment": "education",
+    "expectedCategory": "education",
+    "expectedType": "University Document",
+    "expectedPriority": "high"
+  },
+  {
+    "id": "bench_67",
+    "description": "Commercial GST Tax Invoice",
+    "text": "TAX INVOICE M/S SHREE ENTERPRISES GSTIN: 27ABCDE1234F1Z5 INVOICE NO: INV-2026-89 DATE: 12-01-2026 BILL TO: PUNE MUNICIPAL CORPORATION TOTAL AMOUNT RS. 45000 SGST CGST PAID",
+    "expectedDepartment": "municipal",
+    "expectedCategory": "finance",
+    "expectedType": "Invoice",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_68",
+    "description": "Government Contractor Bill of Supply (Marathi)",
+    "text": "कर पावती व देयक मेसर्स पाटील कन्स्ट्रक्शन्स जीएसटी क्रमांक २७XYZAB1234F1Z9 जिल्हा परिषद रस्ता बांधकाम देयक बिल रक्कम रुपये २,५०,०००",
+    "expectedDepartment": "revenue",
+    "expectedCategory": "finance",
+    "expectedType": "Invoice",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_69",
+    "description": "Comptroller & Auditor General Audit Report",
+    "text": "Office of Principal Accountant General Maharashtra Audit Inspection Report on Accounts and Statutory Financial Compliance",
+    "expectedDepartment": "collector",
+    "expectedCategory": "finance",
+    "expectedType": "Invoice",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_70",
+    "description": "Bank Performance Guarantee for Tender",
+    "text": "Nationalised Bank Performance Security Bank Guarantee Bond for Government Tender Contract Period 12 Months",
+    "expectedDepartment": "collector",
+    "expectedCategory": "finance",
+    "expectedType": "Invoice",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_71",
+    "description": "Family Land Partition Deed / Vatap Patra",
+    "text": "नोंदणी व मुद्रांक विभाग वाटप पत्र / सहहिस्सेदार वाटणी पत्रक गट क्रमांक ५६/३ हिस्सा वाटणी सातबारा सुधारणा",
+    "expectedDepartment": "revenue",
+    "expectedCategory": "land",
+    "expectedType": "Land Record (7/12)",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_72",
+    "description": "E-Pik Pahani Crop Verification Certificate",
+    "text": "महाराष्ट्र शासन महसूल विभाग ई-पीक पाहणी नोंदणी प्रमाणपत्र खरीप हंगाम गट क्र ७८ कापूस व सोयाबीन पीक क्षेत्र नोंद",
+    "expectedDepartment": "revenue",
+    "expectedCategory": "land",
+    "expectedType": "Land Record (7/12)",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_73",
+    "description": "Government Land Encroachment Notice",
+    "text": "तहसीलदार कार्यालय महसूल शाखा अतिक्रमण निष्कासन नोटीस शासकीय गायरान जमीन गट क्र १२ अनधिकृत ताबा काढणे बाबत",
+    "expectedDepartment": "revenue",
+    "expectedCategory": "land",
+    "expectedType": "Land Record (7/12)",
+    "expectedPriority": "urgent"
+  },
+  {
+    "id": "bench_74",
+    "description": "Land Title Search & Clearance Certificate",
+    "text": "Advocate Title Certificate and Search Report 30 years search Revenue Records Satbara 7/12 Ferfar clean and marketable title",
+    "expectedDepartment": "revenue",
+    "expectedCategory": "land",
+    "expectedType": "Land Record (7/12)",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_75",
+    "description": "Gaothan Land Sanad Property Certificate",
+    "text": "Collector Office Land Branch Gaothan Sanad Certificate Grant of proprietary rights over residential plot City Survey No 89",
+    "expectedDepartment": "revenue",
+    "expectedCategory": "land",
+    "expectedType": "Property Card",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_76",
+    "description": "Old Pension Scheme Verification Order",
+    "text": "महाराष्ट्र शासन वित्त विभाग शासन निर्णय जुनी पेन्शन योजना सेवा पडताळणी आदेश महालेखापाल मंजुरी",
+    "expectedDepartment": "collector",
+    "expectedCategory": "administration",
+    "expectedType": "Government Order/Letter",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_77",
+    "description": "Ration Card Member Addition Form",
+    "text": "अन्न व नागरी पुरवठा विभाग रेशन कार्ड शिधापत्रिका नवीन नाव वाढवणे अर्ज फॉर्म क्र ब कौटुंबिक तपशील",
+    "expectedDepartment": "collector",
+    "expectedCategory": "identity",
+    "expectedType": "Ration Card",
+    "expectedPriority": "low"
+  },
+  {
+    "id": "bench_78",
+    "description": "Ayushman Bharat PMJAY Health Card",
+    "text": "National Health Authority Ayushman Bharat PM-JAY Golden Card Health Insurance Beneficiary Family ID 45899",
+    "expectedDepartment": "health",
+    "expectedCategory": "identity",
+    "expectedType": "Aadhaar Card",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_79",
+    "description": "Senior Citizen Welfare ID Card",
+    "text": "Social Justice and Special Assistance Department Senior Citizen Identity Card Age Proof 65 Years Travel Concession",
+    "expectedDepartment": "collector",
+    "expectedCategory": "identity",
+    "expectedType": "Ration Card",
+    "expectedPriority": "low"
+  },
+  {
+    "id": "bench_80",
+    "description": "E-Shram Unorganised Worker Identity Card",
+    "text": "Ministry of Labour and Employment e-Shram Card National Database of Unorganised Workers UAN 4589 1234 5678",
+    "expectedDepartment": "collector",
+    "expectedCategory": "identity",
+    "expectedType": "Ration Card",
+    "expectedPriority": "low"
+  },
+  {
+    "id": "bench_81",
+    "description": "Orphan (Anath) Certificate for Government Job",
+    "text": "Women and Child Development Department Orphan Certificate Anath Pramanpatra 1 percent parallel reservation eligible",
+    "expectedDepartment": "collector",
+    "expectedCategory": "certificate",
+    "expectedType": "Caste Certificate",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_82",
+    "description": "Police Character & Antecedents Certificate",
+    "text": "Office of the Commissioner of Police Character Verification Certificate No adverse criminal record found No Objection Certificate (NOC)",
+    "expectedDepartment": "collector",
+    "expectedCategory": "certificate",
+    "expectedType": "NOC",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_83",
+    "description": "Economically Weaker Section (EWS) Certificate",
+    "text": "Competent Authority Tehsildar Office Economically Weaker Section (EWS) Certificate Maharashtra State 10 percent quota eligibility",
+    "expectedDepartment": "collector",
+    "expectedCategory": "certificate",
+    "expectedType": "Caste Certificate",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_84",
+    "description": "Age Nationality and Domicile Certificate",
+    "text": "Executive Magistrate Office Age Nationality and Domicile Certificate Indian National Citizen Domiciled in Maharashtra State",
+    "expectedDepartment": "collector",
+    "expectedCategory": "certificate",
+    "expectedType": "Domicile Certificate",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_85",
+    "description": "Freedom Fighter Pension Sanction",
+    "text": "General Administration Department Swatantrata Sainik Freedom Fighter Pension Sanction Order and Identity Certificate",
+    "expectedDepartment": "collector",
+    "expectedCategory": "certificate",
+    "expectedType": "Domicile Certificate",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_86",
+    "description": "Water Resources Dam Water Release Circular",
+    "text": "महाराष्ट्र शासन जलसंपदा विभाग परिपत्रक जायकवाडी धरण पाणी विसर्ग कालवा आवर्तन नियोजन तात्काळ आदेश",
+    "expectedDepartment": "collector",
+    "expectedCategory": "administration",
+    "expectedType": "Government Order/Letter",
+    "expectedPriority": "urgent"
+  },
+  {
+    "id": "bench_87",
+    "description": "Pollution Control Board Consent to Operate",
+    "text": "Maharashtra Pollution Control Board Consent to Operate Water Pollution and Air Pollution Prevention Act Compliance Order",
+    "expectedDepartment": "collector",
+    "expectedCategory": "administration",
+    "expectedType": "Government Order/Letter",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_88",
+    "description": "Tribal Development Ashram School Nutrition GR",
+    "text": "महाराष्ट्र शासन आदिवासी विकास विभाग शासन निर्णय आश्रमशाळा विद्यार्थी पोषण आहार व शैक्षणिक सुविधा मंजुरी",
+    "expectedDepartment": "education",
+    "expectedCategory": "education",
+    "expectedType": "Government Order/Letter",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_89",
+    "description": "Urban Development Development Control Circular",
+    "text": "महाराष्ट्र शासन नगर विकास विभाग परिपत्रक युनिफाइड डेव्हलपमेंट कंट्रोल अँड प्रमोशन रेग्युलेशन्स (UDCPR) सुधारणा",
+    "expectedDepartment": "municipal",
+    "expectedCategory": "administration",
+    "expectedType": "Government Order/Letter",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_90",
+    "description": "Women & Child Development Poshan Tracker GR",
+    "text": "महाराष्ट्र शासन महिला व बाल विकास विभाग शासन निर्णय अंगणवाडी पोषण आहार व स्मार्टफोन वाटप योजना",
+    "expectedDepartment": "health",
+    "expectedCategory": "health",
+    "expectedType": "Government Order/Letter",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_91",
+    "description": "National Lok Adalat Mutual Settlement Award",
+    "text": "National Lok Adalat High Court Legal Services Committee Award and Decree Mutual Compromise Settlement between Parties",
+    "expectedDepartment": "collector",
+    "expectedCategory": "legal",
+    "expectedType": "Court Order",
+    "expectedPriority": "high"
+  },
+  {
+    "id": "bench_92",
+    "description": "High Court Anticipatory Bail Order",
+    "text": "IN THE HIGH COURT OF JUDICATURE AT BOMBAY Anticipatory Bail Application No 89/2026 In the event of arrest applicant be released on bail",
+    "expectedDepartment": "collector",
+    "expectedCategory": "legal",
+    "expectedType": "Court Order",
+    "expectedPriority": "high"
+  },
+  {
+    "id": "bench_93",
+    "description": "Passport Police Verification Report (NOC)",
+    "text": "Special Branch Police Commissioner Office Passport Police Verification Report Clear No Criminal Record No Objection Certificate",
+    "expectedDepartment": "collector",
+    "expectedCategory": "certificate",
+    "expectedType": "NOC",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_94",
+    "description": "Loss of Official Document Police Intimation",
+    "text": "Police Station Shivajinagar Lost Document Information Report FIR No 45/2026 Certificate Loss Registered",
     "expectedDepartment": "collector",
     "expectedCategory": "legal",
     "expectedType": "FIR",
-    "expectedPriority": "high"
+    "expectedPriority": "low"
+  },
+  {
+    "id": "bench_95",
+    "description": "Stamp Duty & Registration Fee e-Challan",
+    "text": "Government of Maharashtra Department of Registration and Stamps GRAS e-Challan Stamp Duty and Registration Fee Payment Receipt",
+    "expectedDepartment": "revenue",
+    "expectedCategory": "finance",
+    "expectedType": "Invoice",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_96",
+    "description": "Municipal Local Body Tax (LBT) Assessment",
+    "text": "Municipal Corporation Local Body Tax Department LBT Assessment Order and Tax Demand Bill",
+    "expectedDepartment": "municipal",
+    "expectedCategory": "finance",
+    "expectedType": "Invoice",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_97",
+    "description": "Kisan Credit Card (KCC) Crop Loan Sanction",
+    "text": "District Central Co-operative Bank Kisan Credit Card KCC Agricultural Crop Loan Sanction Gat No 45 Land Mortgage 7/12",
+    "expectedDepartment": "agri",
+    "expectedCategory": "land",
+    "expectedType": "Land Record (7/12)",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_98",
+    "description": "Polyhouse / Greenhouse Subsidy Sanction Order",
+    "text": "महाराष्ट्र शासन कृषी विभाग राष्ट्रीय फलोत्पादन अभियान शेडनेट व हरितगृह अनुदान मंजुरी आदेश",
+    "expectedDepartment": "agri",
+    "expectedCategory": "notice",
+    "expectedType": "Government Order/Letter",
+    "expectedPriority": "medium"
+  },
+  {
+    "id": "bench_99",
+    "description": "National Apprenticeship Certificate (NAC) ITI",
+    "text": "National Council for Vocational Training NCVT National Apprenticeship Certificate Industrial Training Institute Statement of Marks",
+    "expectedDepartment": "education",
+    "expectedCategory": "education",
+    "expectedType": "University Document",
+    "expectedPriority": "low"
+  },
+  {
+    "id": "bench_100",
+    "description": "SPPU Ph.D. Research Viva Voce Declaration",
+    "text": "Savitribai Phule Pune University Ph.D. Degree Declaration and Viva Voce Notification Candidate Awarded Doctor of Philosophy",
+    "expectedDepartment": "education",
+    "expectedCategory": "education",
+    "expectedType": "University Document",
+    "expectedPriority": "low"
   }
 ]

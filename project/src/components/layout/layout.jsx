@@ -3,7 +3,7 @@ import { Outlet } from 'react-router-dom'
 import { Sidebar } from './sidebar'
 import { Navbar } from './navbar'
 import FloatingChatbot from './floating-chatbot'
-import { mockApi } from '@/lib/mock-api'
+import { api } from '@/lib/api'
 
 export function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -11,7 +11,7 @@ export function Layout() {
 
   const loadNotifications = useCallback(async () => {
     try {
-      const data = await mockApi.getNotifications()
+      const data = await api.getNotifications()
       setNotifications(data)
     } catch (_) {}
   }, [])

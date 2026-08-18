@@ -71,12 +71,12 @@ const CLASSIFIER_CATEGORY_TO_DEPARTMENT_ID = {
 // specific.
 const DEPARTMENT_KEYWORD_HINTS = [
   { dept: 'rto', words: ['rto', 'transport', 'driving licence', 'driving license', 'vehicle registration', 'वाहन', 'चालक પરવાના', 'परवाना', 'मोटार'] },
-  { dept: 'revenue', words: ['7/12', 'satbara', 'land record', 'revenue department', 'महसूल', 'सातबारा', 'जमीन', 'गट क्र', 'खाते क्रमांक', 'तहसीलदार'] },
-  { dept: 'municipal', words: ['municipal corporation', 'municipal', 'नगरपालिका', 'महानगरपालिका', 'महापालिका', 'पाणीपट्टी', 'घरपट्टी'] },
-  { dept: 'panchayat', words: ['gram panchayat', 'ग्रामपंचायत', 'पंचायत समिति', 'पंचायत समिती', 'ग्रामविकास'] },
-  { dept: 'health', words: ['health department', 'hospital', 'phc', 'आरोग्य', 'वैद्यकीय', 'रुग्णालय', 'आरोग्य अधिकारी'] },
-  { dept: 'agri', words: ['agriculture', 'crop', 'farmer', 'कृषी', 'शेतकरी', 'पिक', 'शेती', 'कृषी अधिकारी'] },
-  { dept: 'education', words: ['university', 'college', 'school', 'शिक्षण', 'विद्यापीठ', 'महाविद्यालय', 'शाळा', 'प्राध्यापक', 'कुलसचिव', 'परीक्षा', 'गुणपत्रिका', 'scrutiny'] },
+  { dept: 'revenue', words: ['7/12', 'satbara', 'land record', 'revenue department', 'महसूल', 'सातबारा', 'जमीन', 'गट क्र', 'खाते क्रमांक', 'तहसीलदार', 'गायरान', 'अतिक्रमण', 'ई-हक्क', 'नोंदणी व मुद्रांक'] },
+  { dept: 'municipal', words: ['municipal corporation', 'municipal', 'नगरपालिका', 'महानगरपालिका', 'महापालिका', 'पाणीपट्टी', 'घरपट्टी', 'नगर विकास', 'urban development', 'udcpr', 'dcr'] },
+  { dept: 'panchayat', words: ['gram panchayat', 'ग्रामपंचायत', 'पंचायत समिति', 'पंचायत समिती', 'ग्रामविकास', 'ग्रामसभा'] },
+  { dept: 'health', words: ['health department', 'hospital', 'phc', 'आरोग्य', 'वैद्यकीय', 'रुग्णालय', 'आरोग्य अधिकारी', 'ayushman bharat', 'पोषण आहार', 'महिला व बाल विकास'] },
+  { dept: 'agri', words: ['agriculture', 'crop', 'farmer', 'कृषी', 'शेतकरी', 'पिक', 'शेती', 'कृषी अधिकारी', 'kisan', 'पिक विमा', 'हरितगृह', 'मृदा आरोग्य'] },
+  { dept: 'education', words: ['university', 'college', 'school', 'शिक्षण', 'विद्यापीठ', 'महाविद्यालय', 'शाळा', 'प्राध्यापक', 'कुलसचिव', 'परीक्षा', 'गुणपत्रिका', 'आदिवासी विकास'] },
 ]
 
 const URGENT_KEYWORDS = [

@@ -6,7 +6,7 @@ import {
   Landmark, ShieldCheck, CheckCircle2, XCircle, Clock, FileText,
   Building2, Calendar, Hash, Download, ExternalLink,
 } from 'lucide-react'
-import { mockApi } from '@/lib/mock-api'
+import { api } from '@/lib/api'
 import { DEPARTMENTS, CATEGORIES } from '@/lib/mock-data'
 import { Button } from '@/components/ui/button'
 
@@ -57,7 +57,7 @@ export default function VerifyPage() {
   useEffect(() => {
     async function load() {
       try {
-        const doc = await mockApi.getPublicDocumentVerification(id)
+        const doc = await api.getPublicDocumentVerification(id)
         setDoc(doc)
       } catch (err) {
         setError(err.message)

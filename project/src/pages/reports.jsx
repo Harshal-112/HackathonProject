@@ -8,7 +8,7 @@ import {
   ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, LineChart, Line,
 } from 'recharts'
-import { mockApi } from '@/lib/mock-api'
+import { api } from '@/lib/api'
 import { useToast } from '@/lib/toast-context'
 import { PageHeader, EmptyState } from '@/components/shared/page-header'
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card'
@@ -33,7 +33,7 @@ export default function ReportsPage() {
 
   useEffect(() => {
     setLoading(true)
-    mockApi.getReports({ period })
+    api.getReports({ period })
       .then(setData)
       .catch((err) => toast({ title: 'Error', description: err.message, variant: 'destructive' }))
       .finally(() => setLoading(false))
