@@ -134,9 +134,15 @@ export default function DocumentDetailsPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => {
+                onClick={async () => {
                   if (doc.fileUrl) {
-                    window.open(doc.fileUrl, '_blank')
+                    // doc.fileUrl now stores the storage path; fetch a fresh signed URL
+                    const signedUrl = await api.getSignedFileUrl(doc.fileUrl)
+                    if (signedUrl) {
+                      window.open(signedUrl, '_blank')
+                    } else {
+                      toast({ title: 'Download unavailable', description: 'Could not generate a secure download link. Please try again.', variant: 'destructive' })
+                    }
                   } else {
                     const blob = new Blob([`Document Number: ${doc.documentNumber}\nTitle: ${doc.title}\nDepartment: ${doc.department}\nStatus: ${doc.status}\n\n--- OCR TEXT ---\n${doc.ocrText || 'N/A'}`], { type: 'text/plain' })
                     const url = URL.createObjectURL(blob)

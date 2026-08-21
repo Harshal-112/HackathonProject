@@ -343,8 +343,9 @@ export const api = {
           .from('documents')
           .upload(storagePath, file, { cacheControl: '3600', upsert: false })
         if (!storageErr && storageData?.path) {
-          const { data: urlData } = supabase.storage.from('documents').getPublicUrl(storageData.path)
-          fileUrl = urlData?.publicUrl || null
+          // Store the storage path (not a public URL) so we can generate
+          // short-lived signed URLs on demand. The bucket is private.
+          fileUrl = storageData.path
         }
       } catch (_) {
         // Storage upload fail-soft (if bucket not configured)
@@ -961,6 +962,23 @@ export const api = {
         : `I couldn't find any documents matching "${message}". Try asking about document counts, pending approvals, overdue items, recent uploads, or documents by department/category/priority.`
     }
     return { response, aiPowered: false }
+  },
+
+  // --- Signed file URL (private storage) -----------------------------------
+  // Generates a short-lived (1-hour) signed URL for a stored document file.
+  // `storagePath` is the raw path stored in file_url (e.g. "userId/timestamp_name.pdf").
+  // Returns null when no path is supplied or when the storage bucket is not configured.
+  async getSignedFileUrl(storagePath) {
+    if (!storagePath) return null
+    try {
+      const { data, error } = await supabase.storage
+        .from('documents')
+        .createSignedUrl(storagePath, 3600) // 1-hour expiry
+      if (error || !data?.signedUrl) return null
+      return data.signedUrl
+    } catch (_) {
+      return null
+    }
   },
 
   async getConstants() {
