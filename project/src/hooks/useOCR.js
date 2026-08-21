@@ -49,19 +49,20 @@ export function useOCR() {
         setProgress(50)
 
         try {
-          // Run AI metadata + summary in parallel for speed
-          const [aiMetaResult, aiSummaryResult] = await Promise.allSettled([
-            enhanceMetadataWithAI(ocrResult.fullText, {
-              ...parsed,
-              ...meta,
-              documentType: classification.type,
-            }),
-            generateAISummary(ocrResult.fullText, classification),
-          ])
+          // Single unified AI call for metadata + summary (avoids hitting rate limits)
+          const aiMetaResult = await enhanceMetadataWithAI(ocrResult.fullText, {
+            ...parsed,
+            ...meta,
+            documentType: classification.type,
+          })
 
-          if (aiMetaResult.status === 'fulfilled') {
-            aiMeta = aiMetaResult.value
+          if (aiMetaResult) {
+            aiMeta = aiMetaResult
             console.log('AI Metadata:', aiMeta)
+
+            if (aiMeta.summary) {
+              aiSummary = aiMeta.summary
+            }
 
             // If AI is more confident about classification, use it
             if (aiMeta.aiEnhanced && aiMeta.documentType && aiMeta.documentType !== 'Other') {
@@ -74,10 +75,6 @@ export function useOCR() {
                 }
               }
             }
-          }
-
-          if (aiSummaryResult.status === 'fulfilled') {
-            aiSummary = aiSummaryResult.value
           }
         } catch (aiErr) {
           console.warn('AI enhancement failed, using rule-based:', aiErr.message)

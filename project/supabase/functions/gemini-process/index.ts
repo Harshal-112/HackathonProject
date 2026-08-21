@@ -1,10 +1,10 @@
 // ---------------------------------------------------------------------------
 // Supabase Edge Function: gemini-process
 //
-// Secure server-side proxy for Google Gemini API.
+// Secure, high-speed server-side proxy for Google Gemini API.
 // Keeps GEMINI_API_KEY strictly on the server and enforces:
-//  - Multi-model fallback (tries 2.0-flash-lite, 2.5-flash-lite, flash-latest)
-//  - Automatic retry on temporary Google 503 high-demand surges
+//  - Priority ranking: gemini-3.1-flash-lite -> gemini-flash-lite-latest -> gemini-3.7-flash -> gemini-2.5-flash -> gemini-2.5-flash-lite
+//  - Fast failover with 12-second timeout per model
 //  - CORS headers for browser requests
 //  - Pre-flight PII safety validation before dispatching to LLM
 // ---------------------------------------------------------------------------
@@ -14,17 +14,18 @@ import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
 const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY') || ''
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta'
 
-// Reliable, active working models in priority order
+// Ranked active models in requested priority order
 const AI_MODELS = [
-  'gemini-2.0-flash-lite',
+  'gemini-3.1-flash-lite',
+  'gemini-flash-lite-latest',
+  'gemini-3.7-flash',
+  'gemini-2.5-flash',
   'gemini-2.5-flash-lite',
-  'gemini-flash-latest',
-  'gemini-1.5-flash',
 ]
 
 // In-memory rate limiting map: callerId -> timestamps array
 const rateLimitMap = new Map<string, number[]>()
-const RATE_LIMIT_MAX_RPM = 30
+const RATE_LIMIT_MAX_RPM = 60
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -36,6 +37,17 @@ serve(async (req: Request) => {
   // 1. Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: CORS_HEADERS })
+  }
+
+  // Diagnostic model listing support
+  if (req.method === 'GET') {
+    try {
+      const listRes = await fetch(`${GEMINI_BASE}/models?key=${GEMINI_API_KEY}`)
+      const listData = await listRes.json()
+      return new Response(JSON.stringify(listData), { headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } })
+    } catch (e: any) {
+      return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: CORS_HEADERS })
+    }
   }
 
   if (req.method !== 'POST') {
@@ -56,7 +68,7 @@ serve(async (req: Request) => {
 
     if (recentTimestamps.length >= RATE_LIMIT_MAX_RPM) {
       return new Response(
-        JSON.stringify({ error: 'Rate limit exceeded. Please wait a moment before sending more AI requests.' }),
+        JSON.stringify({ error: 'Rate limit exceeded. Please wait a moment.' }),
         { status: 429, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } }
       )
     }
@@ -68,7 +80,7 @@ serve(async (req: Request) => {
     if (!GEMINI_API_KEY || GEMINI_API_KEY.trim() === '') {
       console.error('[gemini-process] GEMINI_API_KEY secret is not set in Supabase project.')
       return new Response(
-        JSON.stringify({ error: 'GEMINI_API_KEY is not configured on Supabase. Set it using: supabase secrets set GEMINI_API_KEY=...' }),
+        JSON.stringify({ error: 'GEMINI_API_KEY is not configured on Supabase.' }),
         { status: 503, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } }
       )
     }
@@ -100,8 +112,8 @@ serve(async (req: Request) => {
       }
     }
 
-    // 6. Forward to Google Gemini API with multi-model fallback & retry
-    const targetModels = model && AI_MODELS.includes(model)
+    // 6. Target models: try caller's requested model first, then ranked fallback models
+    const targetModels = model
       ? [model, ...AI_MODELS.filter((m) => m !== model)]
       : AI_MODELS
 
@@ -112,7 +124,7 @@ serve(async (req: Request) => {
       generationConfig: {
         temperature: 0.1,
         topP: 0.9,
-        maxOutputTokens: 2048,
+        maxOutputTokens: 1024,
       },
     }
 
@@ -123,41 +135,35 @@ serve(async (req: Request) => {
     for (const m of targetModels) {
       const url = `${GEMINI_BASE}/models/${m}:generateContent?key=${GEMINI_API_KEY}`
       
-      // Try up to 2 times per model (handles brief 503 high-demand surges)
-      for (let attempt = 0; attempt < 2; attempt++) {
-        try {
-          const geminiRes = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(geminiPayload),
-          })
+      try {
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 12000)
 
-          if (geminiRes.ok) {
-            const data = await geminiRes.json()
-            const outputText = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
-            if (outputText) {
-              return new Response(
-                JSON.stringify({ text: outputText, modelUsed: m }),
-                { status: 200, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } }
-              )
-            }
+        const geminiRes = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(geminiPayload),
+          signal: controller.signal,
+        })
+        clearTimeout(timeoutId)
+
+        if (geminiRes.ok) {
+          const data = await geminiRes.json()
+          const outputText = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
+          if (outputText) {
+            return new Response(
+              JSON.stringify({ text: outputText, modelUsed: m }),
+              { status: 200, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } }
+            )
           }
-
-          const errBody = await geminiRes.json().catch(() => ({}))
-          lastErrorMsg = errBody?.error?.message || geminiRes.statusText || `HTTP ${geminiRes.status}`
-          console.warn(`[gemini-process] Model ${m} attempt ${attempt + 1} returned ${geminiRes.status}: ${lastErrorMsg}`)
-
-          // If temporary high-demand (503/429), wait 250ms and retry or switch model
-          if (geminiRes.status === 503 || geminiRes.status === 429) {
-            await new Promise((r) => setTimeout(r, 250))
-          } else {
-            break // non-transient error on this model, switch to next model
-          }
-        } catch (err: any) {
-          lastErrorMsg = err.message
-          console.warn(`[gemini-process] Network error calling ${m}:`, err.message)
-          break
         }
+
+        const errBody = await geminiRes.json().catch(() => ({}))
+        lastErrorMsg = errBody?.error?.message || geminiRes.statusText || `HTTP ${geminiRes.status}`
+        console.warn(`[gemini-process] Model ${m} returned ${geminiRes.status}: ${lastErrorMsg}, trying next fallback...`)
+      } catch (err: any) {
+        lastErrorMsg = err.name === 'AbortError' ? `Model ${m} timed out (>12s)` : err.message
+        console.warn(`[gemini-process] Error on ${m}: ${lastErrorMsg}`)
       }
     }
 
