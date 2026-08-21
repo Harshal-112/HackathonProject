@@ -302,6 +302,16 @@ export const api = {
   async deleteDocument(id, user) {
     const { data: existing } = await supabase.from('documents').select('*').eq('id', id).single()
     const doc = toDoc(existing)
+
+    // Clean up stored file from Supabase Storage if present
+    if (doc?.fileUrl) {
+      try {
+        await supabase.storage.from('documents').remove([doc.fileUrl])
+      } catch (_) {
+        // Fail-soft if storage file is already missing
+      }
+    }
+
     const { error } = await supabase.from('documents').delete().eq('id', id)
     ok(error)
     await logAction(user, 'DELETE', 'Deleted document', doc)
@@ -333,23 +343,23 @@ export const api = {
     const assignedVerifier = dept ? await findLeastLoadedVerifier(dept) : null
     const assignedAt = assignedVerifier ? new Date().toISOString() : null
 
-    // Optional: Upload original scanned file to Supabase Storage bucket
+    // Optional: Upload original scanned file to Supabase Storage bucket (Private Bucket)
+    // Fails soft if bucket doesn't exist or storage isn't configured
     let fileUrl = null
-    if (file instanceof Blob || (typeof File !== 'undefined' && file instanceof File)) {
-      try {
-        const fileExt = file.name.split('.').pop().toLowerCase()
-        const storagePath = `${user.id}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`
+    try {
+      if (file instanceof Blob || (typeof File !== 'undefined' && file instanceof File)) {
+        const sanitizedDept = dept || 'general'
+        const storagePath = `${sanitizedDept}/${user.id}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`
         const { data: storageData, error: storageErr } = await supabase.storage
           .from('documents')
           .upload(storagePath, file, { cacheControl: '3600', upsert: false })
         if (!storageErr && storageData?.path) {
-          // Store the storage path (not a public URL) so we can generate
-          // short-lived signed URLs on demand. The bucket is private.
+          // Store relative storage path for secure signed URL generation
           fileUrl = storageData.path
         }
-      } catch (_) {
-        // Storage upload fail-soft (if bucket not configured)
       }
+    } catch (_) {
+      // Storage not configured — continue without file storage
     }
 
     const row = {
@@ -357,7 +367,6 @@ export const api = {
       file_name: file.name,
       file_type: file.name.split('.').pop().toLowerCase(),
       file_size: file.size,
-      file_url: fileUrl,
       category: catId,
       department: dept,
       priority: priorityId,
@@ -395,6 +404,10 @@ export const api = {
       assigned_verifier_name: assignedVerifier?.name || null,
       assigned_at: assignedAt,
     }
+
+    // Only include file_url if the column exists (migration 005 applied) and upload succeeded
+    if (fileUrl) row.file_url = fileUrl
+
     const { data, error } = await supabase.from('documents').insert(row).select().single()
     ok(error)
     const doc = toDoc(data)
@@ -966,10 +979,14 @@ export const api = {
 
   // --- Signed file URL (private storage) -----------------------------------
   // Generates a short-lived (1-hour) signed URL for a stored document file.
-  // `storagePath` is the raw path stored in file_url (e.g. "userId/timestamp_name.pdf").
+  // `storagePath` is the raw path stored in file_url (e.g. "dept/userId/timestamp_name.pdf").
   // Returns null when no path is supplied or when the storage bucket is not configured.
   async getSignedFileUrl(storagePath) {
     if (!storagePath) return null
+    // If it is already a full external URL, return it directly
+    if (storagePath.startsWith('http://') || storagePath.startsWith('https://')) {
+      return storagePath
+    }
     try {
       const { data, error } = await supabase.storage
         .from('documents')

@@ -1,9 +1,12 @@
 -- =============================================================================
--- Migration 005: Security, RLS Tightening, Storage & Server-Side Validation
+-- Migration 005: Security, RLS Tightening, Private Storage & Server-Side Validation
 -- =============================================================================
 
 -- 1. Tighten profiles table RLS (Prevent citizens from scraping staff PII)
 DROP POLICY IF EXISTS "profiles_select_policy" ON public.profiles;
+DROP POLICY IF EXISTS "profiles_select_self" ON public.profiles;
+DROP POLICY IF EXISTS "profiles_select_staff" ON public.profiles;
+DROP POLICY IF EXISTS "profiles_select_verifier_dept" ON public.profiles;
 
 -- Citizen can only view their own profile
 CREATE POLICY "profiles_select_self"
@@ -115,20 +118,61 @@ BEGIN
   END IF;
 END $$;
 
--- 4. Supabase Storage bucket setup (for persistent original document files)
+-- 4. Supabase Storage bucket setup (Private bucket with Role-Based Access Control)
+-- Bucket is private (public = false) so files cannot be viewed via direct URLs
 INSERT INTO storage.buckets (id, name, public)
-VALUES ('documents', 'documents', true)
-ON CONFLICT (id) DO NOTHING;
+VALUES ('documents', 'documents', false)
+ON CONFLICT (id) DO UPDATE SET public = false;
 
--- Storage policies for document uploads
-CREATE POLICY "Authenticated users can upload original documents"
+-- Clean up old storage policies if existing
+DROP POLICY IF EXISTS "Authenticated users can upload original documents" ON storage.objects;
+DROP POLICY IF EXISTS "Users can view uploaded documents" ON storage.objects;
+DROP POLICY IF EXISTS "storage_documents_insert" ON storage.objects;
+DROP POLICY IF EXISTS "storage_documents_admin_select" ON storage.objects;
+DROP POLICY IF EXISTS "storage_documents_verifier_select" ON storage.objects;
+DROP POLICY IF EXISTS "storage_documents_owner_select" ON storage.objects;
+
+-- Policy 1: Authenticated users can upload to the documents bucket
+CREATE POLICY "storage_documents_insert"
 ON storage.objects
 FOR INSERT
 TO authenticated
 WITH CHECK (bucket_id = 'documents');
 
-CREATE POLICY "Users can view uploaded documents"
+-- Policy 2: Admin can view/download ALL document files
+CREATE POLICY "storage_documents_admin_select"
 ON storage.objects
 FOR SELECT
 TO authenticated
-USING (bucket_id = 'documents');
+USING (
+  bucket_id = 'documents'
+  AND (SELECT role FROM public.profiles WHERE id = auth.uid()) = 'admin'
+);
+
+-- Policy 3: Verifier can only view/download documents belonging to their department
+-- Path convention: {department}/{uploader_id}/{filename}
+CREATE POLICY "storage_documents_verifier_select"
+ON storage.objects
+FOR SELECT
+TO authenticated
+USING (
+  bucket_id = 'documents'
+  AND (SELECT role FROM public.profiles WHERE id = auth.uid()) = 'verifier'
+  AND (
+    (storage.foldername(name))[1] = (SELECT department FROM public.profiles WHERE id = auth.uid())
+    OR (storage.foldername(name))[1] = 'general'
+  )
+);
+
+-- Policy 4: Citizens and Officers can ONLY view/download their own uploaded documents
+CREATE POLICY "storage_documents_owner_select"
+ON storage.objects
+FOR SELECT
+TO authenticated
+USING (
+  bucket_id = 'documents'
+  AND (
+    owner = auth.uid()
+    OR (storage.foldername(name))[2] = auth.uid()::text
+  )
+);
